@@ -1,163 +1,82 @@
 /**
-
  * 1. ฟังก์ชัน doGet สำหรับเปิดหน้า Web App
-
  */
-
 function doGet(e) {
-
   return HtmlService.createTemplateFromFile('index')
-
     .evaluate()
-
     .setTitle('ระบบวิเคราะห์และติดตามงาน ภ.8 (FCI)')
-
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-
 }
-
-
 
 function include(filename) {
-
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
-
 }
 
-
-
 /**
-
- * 2. ฟังก์ชันอัปเดตข้อมูล (Optimized)
-
- * ปรับปรุงให้ลดจำนวนการเรียกใช้ Sheet API เพื่อความรวดเร็ว
-
+ * 2. ฟังก์ชันอัปเดตข้อมูล
  */
-
 function updateRecordInSheet(payloadString) {
-
   try {
-
     if (!payloadString) throw new Error("ไม่มีข้อมูลส่งมาเพื่ออัปเดต");
-
     var params = JSON.parse(payloadString);
-
     
-
     var ATM_SHEET_ID = "1nRuVfB2XAFIsVFQr_CoJwPKRFC3NUHSj3icOepoL8mI"; 
-
     var BRANCH_SHEET_ID = "1QYlJKK4ijp-oeMUKMAPBD_buuPLP4wUDHNmOgzJmtPk";
-
     var targetSheetId = (params.source_type === "ATM") ? ATM_SHEET_ID : BRANCH_SHEET_ID;
-
     
-
     var ss = SpreadsheetApp.openById(targetSheetId);
-
     var sheet = ss.getSheets()[0];
-
     
-
+    var maxRows = sheet.getLastRow();
     var lastCol = sheet.getLastColumn();
-
     var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
-
-    var cleanHeaders = headers.map(function(h) { return String(h).trim(); });
-
     
-
-    var rowIndex = parseInt(params.row_index, 10);
-
-    if (isNaN(rowIndex) || rowIndex <= 1) throw new Error("เลขบรรทัดไม่ถูกต้อง");
-
-
-
+    var cleanHeaders = headers.map(function(h) { return String(h).trim(); });
+    var rowIndex = parseInt(params.row_index, 10); 
+    
     var newStatus = params.status;
-
     var newNote = params.note;
-
     var newLink = params.report_link;
 
-
-
-    // ค้นหาตำแหน่งคอลัมน์
-
     var statusCol = cleanHeaders.indexOf("สถานะติดตามงาน");
-
     if (statusCol === -1) statusCol = cleanHeaders.indexOf("สถานะ");
-
     var noteCol = cleanHeaders.indexOf("หมายเหตุ");
-
     var linkCol = cleanHeaders.indexOf("link คุมรายงานสืบ");
-
     if (linkCol === -1) linkCol = cleanHeaders.indexOf("link");
-
+    
+    // 🚨 หาคอลัมน์เวลาอัปเดต
     var timeCol = cleanHeaders.indexOf("เวลาอัปเดตล่าสุด");
 
+    if (!isNaN(rowIndex) && rowIndex > 1 && rowIndex <= maxRows) {
+      var updatedFields = [];
 
-
-    // เตรียมการอัปเดต (เพื่อความรวดเร็วจะพยายามรวมการอัปเดตถ้าเป็นไปได้)
-
-    // แต่ในกรณีที่คอลัมน์กระจายกัน เราจะใช้ getRange(row, col).setValue() ตามเดิมแต่จัดการให้เป็นระเบียบ
-
-    var updateCount = 0;
-
-    
-
-    if (statusCol > -1 && newStatus !== undefined) {
-
-      sheet.getRange(rowIndex, statusCol + 1).setValue(newStatus);
-
-      updateCount++;
-
+      if (statusCol > -1 && newStatus !== undefined) {
+        sheet.getRange(rowIndex, statusCol + 1).setValue(newStatus);
+        updatedFields.push("สถานะ");
+      }
+      if (noteCol > -1 && newNote !== undefined) {
+        sheet.getRange(rowIndex, noteCol + 1).setValue(newNote);
+        updatedFields.push("หมายเหตุ");
+      }
+      if (linkCol > -1 && newLink !== undefined) {
+        sheet.getRange(rowIndex, linkCol + 1).setValue(newLink);
+        updatedFields.push("ลิงก์");
+      }
+      
+      // 🚨 แสตมป์เวลาล่าสุดลงในชีต
+      if (timeCol > -1 && updatedFields.length > 0) {
+        var formattedDate = Utilities.formatDate(new Date(), "Asia/Bangkok", "dd/MM/yyyy HH:mm:ss");
+        sheet.getRange(rowIndex, timeCol + 1).setValue(formattedDate);
+      }
+      
+      if (updatedFields.length === 0) throw new Error("ไม่พบคอลัมน์เป้าหมายในชีตเลยครับ");
+      return { success: true, message: "อัปเดตข้อมูลเรียบร้อยแล้ว" };
+    } else {
+      throw new Error("ไม่พบข้อมูลที่ต้องการอัปเดต หรือเลขบรรทัดไม่ถูกต้อง");
     }
-
-    if (noteCol > -1 && newNote !== undefined) {
-
-      sheet.getRange(rowIndex, noteCol + 1).setValue(newNote);
-
-      updateCount++;
-
-    }
-
-    if (linkCol > -1 && newLink !== undefined) {
-
-      sheet.getRange(rowIndex, linkCol + 1).setValue(newLink);
-
-      updateCount++;
-
-    }
-
-    
-
-    // 🚨 แสตมป์เวลาล่าสุด
-
-    if (timeCol > -1 && updateCount > 0) {
-
-      // ใช้เวลาที่ส่งมาจากหน้าบ้าน ถ้าไม่มีให้ใช้เวลาเซิร์ฟเวอร์
-
-      var timeValue = params.timestamp || Utilities.formatDate(new Date(), "Asia/Bangkok", "dd/MM/yyyy HH:mm:ss");
-
-      sheet.getRange(rowIndex, timeCol + 1).setValue(timeValue);
-
-    }
-
-    
-
-    if (updateCount === 0) throw new Error("ไม่พบคอลัมน์เป้าหมายที่จะอัปเดต");
-
-    
-
-    return { success: true, message: "อัปเดตข้อมูลสำเร็จ (" + updateCount + " รายการ)" };
-
   } catch (error) {
-
     console.error("Update Error:", error);
-
-    return { success: false, message: "เกิดข้อผิดพลาด: " + error.message };
-
+    throw new Error("เกิดข้อผิดพลาดในการบันทึก: " + error.message);
   }
-
 }

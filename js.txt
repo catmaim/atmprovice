@@ -1,4224 +1,2132 @@
 <script type="text/babel">
-
 const runDashboard = () => {
-
     if (!window.React || !window.ReactDOM || !window.Recharts || !window.L || !window.Papa || !window.Icons) {
-
         setTimeout(runDashboard, 100);
-
         return;
-
     }
 
-
-
     const { useState, useMemo, useEffect, useRef } = React;
-
     const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } = window.Recharts;
 
-
-
     const REGION_8_PROVINCES = ["ภูเก็ต", "สุราษฎร์ธานี", "นครศรีธรรมราช", "กระบี่", "พังงา", "ระนอง", "ชุมพร"];
-
     const Icons = window.Icons;
-
     const BANK_COLORS = { "KBANK": "#10b981", "SCB": "#4f46e5", "KTB": "#0ea5e9", "BBL": "#3b82f6", "GSB": "#ec4899", "UOBT": "#8b5cf6", "TTB": "#3b82f6", "BAAC": "#10b981" };
 
-
-
     const parseAmount = (val) => { 
-
         if (!val) return 0; 
-
         const cleanVal = String(val).replace(/[^0-9.-]+/g, ''); 
-
         const num = parseFloat(cleanVal); 
-
         return isNaN(num) ? 0 : num; 
-
     };
-
-
 
     const getHourFromTime = (timeStr) => {
-
         if (!timeStr) return null;
-
         const match = String(timeStr).trim().match(/^(\d{1,2}):/);
-
         if (match) return parseInt(match[1], 10);
-
         return null;
-
     };
-
-
 
     const formatMoney = (amount) => { 
-
         return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); 
-
     };
-
-
 
     const formatDateTime = () => {
-
         const now = new Date();
-
         const d = now.getDate().toString().padStart(2, '0');
-
         const m = (now.getMonth() + 1).toString().padStart(2, '0');
-
         const y = now.getFullYear() + 543; // Buddhist Year
-
         const h = now.getHours().toString().padStart(2, '0');
-
         const min = now.getMinutes().toString().padStart(2, '0');
-
         const s = now.getSeconds().toString().padStart(2, '0');
-
         return `${d}/${m}/${y} ${h}:${min}:${s}`;
-
     };
-
-
 
     const parseDateLocal = (dateStr) => {
-
         if (!dateStr) return null;
-
         let dStr = String(dateStr).split(',')[0].split(' ')[0].split('T')[0].trim();
-
         if (dStr.includes('/')) {
-
             const p = dStr.split('/');
-
             if (p.length === 3) {
-
                 if (p[2].length >= 4) return new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
-
                 if (p[0].length >= 4) return new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
-
             }
-
         } else if (dStr.includes('-')) {
-
             const p = dStr.split('-');
-
             if (p.length === 3) {
-
                 if (p[0].length >= 4) return new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
-
                 if (p[2].length >= 4) return new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
-
             }
-
         }
-
         const d = new Date(dStr);
-
         if (!isNaN(d.getTime())) {
-
             d.setHours(0, 0, 0, 0);
-
             return d;
-
         }
-
         return null;
-
     };
-
-
 
     const formatTime = (timeStr) => {
-
         if (!timeStr) return "";
-
         let t = String(timeStr).trim().split(' ')[0];
-
         const parts = t.split(':');
-
         if (parts.length >= 2) {
-
             return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
-
         }
-
         return "";
-
     };
-
-
 
     const HalfDonut = ({ percent }) => {
-
         const width = 110;
-
         const height = 55;
-
         const strokeWidth = 12;
-
         const radius = (width - strokeWidth) / 2;
-
         const cy = height;
-
         const circumference = Math.PI * radius;
-
         const offset = circumference - (percent / 100) * circumference;
-
         const color = percent >= 80 ? '#10b981' : percent >= 40 ? '#f59e0b' : '#ef4444';
 
-
-
         return (
-
             <div className="relative flex flex-col items-center justify-end group" style={{ width: width, height: height + 20 }}>
-
                 <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="drop-shadow-sm">
-
                     <path d={`M ${strokeWidth / 2} ${cy} A ${radius} ${radius} 0 0 1 ${width - strokeWidth / 2} ${cy}`} fill="none" stroke="#f1f5f9" strokeWidth={strokeWidth} strokeLinecap="round" />
-
                     <path d={`M ${strokeWidth / 2} ${cy} A ${radius} ${radius} 0 0 1 ${width - strokeWidth / 2} ${cy}`} fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset} style={{ transition: 'stroke-dashoffset 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)' }} />
-
                 </svg>
-
                 <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
-
                     <span className="text-2xl font-black text-slate-800 leading-none tabular-nums tracking-tighter">{percent}%</span>
-
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Progress</span>
-
                 </div>
-
             </div>
-
         );
-
     };
 
-
-
-    // �Ÿ�� อัปเดต STATUS_INFO ใหม่
-
+    // 🚨 อัปเดต STATUS_INFO ใหม่
     const STATUS_INFO = {
-
         "รอรับเรื่อง": { color: "#f59e0b", short: "รอรับเรื่อง", bg: "bg-amber-50", border: "border-amber-200" },
-
         "อยู่ระหว่างสืบสวน": { color: "#8b5cf6", short: "สืบสวน", bg: "bg-purple-50", border: "border-purple-200" },
-
         "จัดทำรายงานสืบแล้ว": { color: "#0ea5e9", short: "รายงานแล้ว", bg: "bg-sky-50", border: "border-sky-200" },
-
         "ส่งคืนต้นสังกัดแล้ว": { color: "#10b981", short: "ส่งคืนแล้ว", bg: "bg-emerald-50", border: "border-emerald-200" },
-
         "ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก...": { color: "#ef4444", short: "ไม่พบ/ยกเลิก", bg: "bg-red-50", border: "border-red-200" }
-
     };
-
-
 
     const getStatusColorClass = (status) => {
-
         if (status === 'รอรับเรื่อง') return 'bg-amber-50 border-amber-200 text-amber-600 focus:ring-amber-500 hover:border-amber-300';
-
         if (status === 'อยู่ระหว่างสืบสวน') return 'bg-purple-50 border-purple-200 text-purple-600 focus:ring-purple-500 hover:border-purple-300';
-
         if (status === 'จัดทำรายงานสืบแล้ว') return 'bg-sky-50 border-sky-200 text-sky-600 focus:ring-sky-500 hover:border-sky-300';
-
         if (status === 'ส่งคืนต้นสังกัดแล้ว') return 'bg-emerald-50 border-emerald-200 text-emerald-600 focus:ring-emerald-500 hover:border-emerald-300';
-
         if (status === 'ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก...') return 'bg-red-50 border-red-200 text-red-600 focus:ring-red-500 hover:border-red-300';
-
         return 'bg-white border-slate-300 text-slate-700 focus:ring-indigo-500 hover:border-slate-400';
-
     };
-
-
 
     const ChartTooltip = ({ active, payload, label }) => {
-
         if (active && payload && payload.length) {
-
             const data = payload[0].payload;
-
             return (
-
                 <div className="bg-white p-3.5 border border-slate-200 shadow-xl rounded-xl z-50 min-w-[190px] animate-fade-slide-up">
-
                     <p className="font-bold text-slate-800 mb-2.5 border-b border-slate-100 pb-2 flex justify-between items-center">
-
                         {label || "ไม่ระบุ"}
-
                         <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium ml-2"> คลิกดู </span>
-
                     </p>
-
                     <div className="flex flex-col gap-2 text-xs">
-
                         <div className="flex justify-between items-center gap-4">
-
                             <span className="flex items-center gap-1.5 text-slate-500 font-medium"> <div className="w-2 h-2 rounded-full" style={{ backgroundColor: data.fill || '#6366f1' }}> </div> รายการ:</span>
-
                             <span className="font-bold text-slate-800"> {data.count} </span>
-
                         </div>
-
                         <div className="flex justify-between items-center gap-4">
-
                             <span className="flex items-center gap-1.5 text-slate-500 font-medium"> <div className="w-2 h-2 rounded-full bg-red-500"> </div> ยอดรวม:</span>
-
                             <span className="font-bold text-red-600"> {formatMoney(data.amount)} ฿</span>
-
                         </div>
-
                     </div>
-
                 </div>
-
             );
-
         }
-
         return null;
-
     };
-
-
 
     const TaskChartTooltip = ({ active, payload, label }) => {
-
         if (active && payload && payload.length) {
-
             const data = payload[0].payload;
-
             return (
-
                 <div className="bg-white p-3.5 border border-slate-200 shadow-xl rounded-xl z-50 min-w-[190px] animate-fade-slide-up">
-
                     <p className="font-bold text-slate-800 mb-2.5 border-b border-slate-100 pb-2"> จ.{label || "ไม่ระบุ"} </p>
-
                     <div className="flex flex-col gap-2 text-xs">
-
                         <div className="flex justify-between items-center gap-4">
-
                             <span className="flex items-center gap-1.5 text-slate-500 font-medium"> <div className="w-2 h-2 rounded-full bg-[#f59e0b]"> </div> รอรับเรื่อง:</span>
-
                             <span className="font-bold text-slate-800"> {data["รอรับเรื่อง"] || 0} </span>
-
                         </div>
-
                         <div className="flex justify-between items-center gap-4">
-
                             <span className="flex items-center gap-1.5 text-slate-500 font-medium"> <div className="w-2 h-2 rounded-full bg-[#8b5cf6]"> </div> สืบสวน:</span>
-
                             <span className="font-bold text-slate-800"> {data["อยู่ระหว่างสืบสวน"] || 0} </span>
-
                         </div>
-
                         <div className="flex justify-between items-center gap-4">
-
                             <span className="flex items-center gap-1.5 text-slate-500 font-medium"> <div className="w-2 h-2 rounded-full bg-[#0ea5e9]"> </div> รายงานแล้ว:</span>
-
                             <span className="font-bold text-slate-800"> {data["จัดทำรายงานสืบแล้ว"] || 0} </span>
-
                         </div>
-
                         <div className="flex justify-between items-center gap-4">
-
                             <span className="flex items-center gap-1.5 text-slate-500 font-medium"> <div className="w-2 h-2 rounded-full bg-[#10b981]"> </div> ส่งคืน:</span>
-
                             <span className="font-bold text-slate-800"> {data["ส่งคืนต้นสังกัดแล้ว"] || 0} </span>
-
                         </div>
-
                         <div className="flex justify-between items-center gap-4">
-
                             <span className="flex items-center gap-1.5 text-slate-500 font-medium"> <div className="w-2 h-2 rounded-full bg-[#ef4444]"> </div> ไม่พบ/ยกเลิก:</span>
-
                             <span className="font-bold text-slate-800"> {data["ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก..."] || 0} </span>
-
                         </div>
-
                     </div>
-
                 </div>
-
             );
-
         }
-
         return null;
-
     };
-
-
 
     const CustomStatusSelect = ({ value, onChange, isSaving }) => {
-
         const [isOpen, setIsOpen] = useState(false);
-
         const currentObj = STATUS_INFO[value] || STATUS_INFO["รอรับเรื่อง"];
-
         const selectRef = useRef(null);
 
-
-
         useEffect(() => {
-
             const handleClickOutside = (event) => {
-
                 if (selectRef.current && !selectRef.current.contains(event.target)) {
-
                     setIsOpen(false);
-
                 }
-
             };
-
             document.addEventListener('mousedown', handleClickOutside);
-
             return () => document.removeEventListener('mousedown', handleClickOutside);
-
         }, []);
 
-
-
         return (
-
             <div className="relative inline-block text-left w-full max-w-[140px] mx-auto" ref={selectRef}>
-
                 <div 
-
                     className={`flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl cursor-pointer border shadow-sm transition-all text-[11px] font-bold select-none ${currentObj.bg} ${currentObj.border} ${isSaving ? 'opacity-60 pointer-events-none' : 'hover:shadow-md hover:scale-[1.02] active:scale-95'}`}
-
                     onClick={() => !isSaving && setIsOpen(!isOpen)}
-
                     style={{ color: currentObj.color }}
-
                 >
-
                     <span className="truncate flex-1 text-center tracking-tight"> {currentObj.short || value} </span>
-
                     {isSaving ? (
-
                         <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin shrink-0"></div>
-
                     ) : (
-
                         <Icons.ChevronDown size={14} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-
                     )}
-
                 </div>
-
-
 
                 {isOpen && (
-
                     <div className="absolute right-0 md:left-1/2 md:-translate-x-1/2 mt-2 w-auto min-w-[200px] bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200/60 z-[100] py-2 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200">
-
                         <div className="px-4 py-2 mb-1 border-b border-slate-50">
-
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest"> เลือกสถานะงาน </span>
-
                         </div>
-
                         {Object.keys(STATUS_INFO).map(k => (
-
                             <div key={k}
-
                                 className={`px-4 py-2.5 flex items-center gap-3 text-xs cursor-pointer transition-all ${value === k ? 'bg-indigo-50 text-indigo-700' : 'hover:bg-slate-50 text-slate-600'}`}
-
                                 onClick={() => { onChange(k); setIsOpen(false); }}
-
                             >
-
                                 <div className="relative flex-shrink-0">
-
                                     <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: STATUS_INFO[k].color }}></div>
-
                                     {value === k && <div className="absolute inset-0 rounded-full animate-ping opacity-40" style={{ backgroundColor: STATUS_INFO[k].color }}></div>}
-
                                 </div>
-
                                 <span className={`font-bold tracking-tight ${value === k ? 'text-indigo-700' : 'text-slate-600'}`}>{k}</span>
-
                             </div>
-
                         ))}
-
                     </div>
-
                 )}
-
             </div>
-
         );
-
     };
-
-
 
     const LeafletMap = ({ data, mapFocus }) => {
-
         const mapContainerRef = useRef(null);
-
         const mapInstanceRef = useRef(null);
-
         const markersLayerRef = useRef(null);
-
         const markerRefs = useRef({});
 
-
-
         useEffect(() => {
-
             if (!mapContainerRef.current || mapInstanceRef.current || !window.L) return;
-
             try {
-
                 const map = L.map(mapContainerRef.current, { zoomControl: false }).setView([8.5, 99.0], 7);
-
                 L.control.zoom({ position: 'topleft' }).addTo(map);
-
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
-
                 markersLayerRef.current = L.layerGroup().addTo(map);
-
                 mapInstanceRef.current = map;
-
                 setTimeout(() => { map.invalidateSize(); }, 200);
-
             } catch (e) {}
-
             return () => { if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current = null; } };
-
         }, []);
 
-
-
         useEffect(() => {
-
             if (!mapInstanceRef.current || !markersLayerRef.current) return;
-
             markersLayerRef.current.clearLayers();
-
             markerRefs.current = {};
 
-
-
             const aggregatedPoints = {};
-
             data.forEach(point => {
-
                 const latVal = String(point.atm_lat || '').replace(/[^0-9.-]/g, '');
-
                 const lonVal = String(point.atm_lon || '').replace(/[^0-9.-]/g, '');
-
                 const lat = parseFloat(latVal);
-
                 const lon = parseFloat(lonVal);
 
-
-
                 if (!isNaN(lat) && !isNaN(lon) && lat !== 0 && lon !== 0) {
-
                     const key = `${lat.toFixed(4)},${lon.toFixed(4)}`;
-
                     if (!aggregatedPoints[key]) {
-
                         let extraInfo = '';
-
                         if (point.source_type === 'ATM' || point._source_type === 'ATM') {
-
                             extraInfo = point.atm_name || point['ชื่อเครื่อง ATM'] || '';
-
                         } else {
-
                             extraInfo = point.branch_address || point['ที่อยู่สาขา'] || '';
-
                         }
 
-
-
                         aggregatedPoints[key] = {
-
                             lat, lon, count: 0, amount: 0,
-
                             location: point.atm_location || 'ไม่ระบุสถานที่',
-
                             province: point.atm_province || 'ไม่ระบุ',
-
                             extraInfo: extraInfo,
-
                             sourceType: point.source_type || point._source_type,
-
                             bankCodes: new Set()
-
                         };
-
                     }
-
                     aggregatedPoints[key].count += 1;
-
                     aggregatedPoints[key].amount += parseAmount(point.transfer_amount);
-
                     if (point.atm_bank_code && point.atm_bank_code !== 'ไม่ระบุ') {
-
                         aggregatedPoints[key].bankCodes.add(point.atm_bank_code);
-
                     }
-
                 }
-
             });
-
-
 
             Object.values(aggregatedPoints).forEach(group => {
-
                 let color = '#3b82f6'; let radius = 10;
-
                 if (group.count >= 10) { color = '#ef4444'; radius = 24; }
-
                 else if (group.count >= 5) { color = '#f97316'; radius = 16; }
 
-
-
                 const marker = L.circleMarker([group.lat, group.lon], {
-
                     radius, fillColor: color, color: color, weight: 4, opacity: 0.3, fillOpacity: 0.6
-
                 });
-
                 const center = L.circleMarker([group.lat, group.lon], {
-
                     radius: radius / 2, fillColor: color, color: '#fff', weight: 1, opacity: 1, fillOpacity: 1
-
                 });
-
-
 
                 const extraInfoLabel = group.sourceType === 'ATM' ? 'ชื่อเครื่อง ATM' : 'ที่อยู่สาขา';
-
                 const extraInfoHtml = group.extraInfo ? `
-
                     <tr style="border-bottom: 1px dashed #e2e8f0;">
-
                         <td style="padding: 6px 0; color: #64748b; vertical-align: top; width: 40%;">${extraInfoLabel}</td>
-
                         <td style="padding: 6px 0; text-align: right; font-weight: 500; font-size: 11px; color: #0f172a; line-height: 1.4;">${group.extraInfo}</td>
-
                     </tr>
-
                 ` : '';
 
-
-
                 let bankHtml = '';
-
                 if (group.bankCodes && group.bankCodes.size > 0) {
-
                     const badges = Array.from(group.bankCodes).map(bank => {
-
                         const bgColor = BANK_COLORS[bank] || '#94a3b8';
-
                         return `<span style="background-color: ${bgColor}; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 4px; display: inline-block; margin-bottom: 2px;">${bank}</span>`;
-
                     }).join('');
 
-
-
                     bankHtml = `
-
                         <tr style="border-bottom: 1px dashed #e2e8f0;">
-
                             <td style="padding: 6px 0; color: #64748b; vertical-align: middle;">ธนาคาร</td>
-
                             <td style="padding: 6px 0; text-align: right;">${badges}</td>
-
                         </tr>
-
                     `;
-
                 }
-
-
 
                 const popupTableHtml = `
-
                     <div style="font-family: 'Sarabun', sans-serif; min-width: 250px;">
-
                         <div style="background-color: #1e293b; color: white; padding: 10px 12px; font-weight: bold; font-size: 13px; line-height: 1.3;">
-
                             <div style="display:flex; align-items:center; gap:6px;">
-
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-
                                 ${group.location}
-
                             </div>
-
                         </div>
-
                         <div style="padding: 12px; background-color: #ffffff;">
-
                             <table style="width: 100%; font-size: 12px; color: #334155; border-collapse: collapse;">
-
                                 ${bankHtml}
-
                                 ${extraInfoHtml}
-
                                 <tr style="border-bottom: 1px dashed #e2e8f0;">
-
                                     <td style="padding: 6px 0; color: #64748b;">จังหวัด</td>
-
                                     <td style="padding: 6px 0; text-align: right; font-weight: bold;">${group.province}</td>
-
                                 </tr>
-
                                 <tr style="border-bottom: 1px dashed #e2e8f0;">
-
                                     <td style="padding: 6px 0; color: #64748b;">ความถี่ (ครั้ง)</td>
-
                                     <td style="padding: 6px 0; text-align: right; font-weight: bold; color: #0f172a;">${group.count}</td>
-
                                 </tr>
-
                                 <tr>
-
                                     <td style="padding: 6px 0; color: #64748b;">ยอดรวม (บาท)</td>
-
                                     <td style="padding: 6px 0; text-align: right; font-weight: bold; color: #e11d48; font-size: 13px;">${group.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-
                                 </tr>
-
                             </table>
-
                         </div>
-
                     </div>
-
                 `;
-
-
 
                 const hoverTooltipHtml = `
-
                     <div style="font-family: 'Sarabun', sans-serif; text-align: center; min-width: 120px;">
-
                         <div style="font-weight: bold; color: #1e293b; font-size: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 4px;">${group.location}</div>
-
                         <div style="font-size: 11px; color: #64748b;">
-
                             ความถี่: <span style="font-weight: bold; color: #4f46e5;">${group.count} ครั้ง</span>
-
                         </div>
-
                         <div style="font-size: 11px; color: #64748b;">
-
                             ยอดรวม: <span style="font-weight: bold; color: #e11d48;">${group.amount.toLocaleString('en-US')} ฿</span>
-
                         </div>
-
                     </div>
-
                 `;
 
-
-
                 marker.bindPopup(popupTableHtml, { className: 'custom-popup', offset: [0, -radius] });
-
                 marker.bindTooltip(hoverTooltipHtml, { direction: 'top', className: 'custom-map-tooltip', offset: [0, -radius] });
 
-
-
                 markersLayerRef.current.addLayer(marker);
-
                 markersLayerRef.current.addLayer(center);
 
-
-
                 markerRefs.current[`${group.lat.toFixed(4)},${group.lon.toFixed(4)}`] = marker;
-
             });
-
         }, [data]);
 
-
-
         useEffect(() => {
-
             if (mapFocus && mapFocus.lat && mapFocus.lon && mapInstanceRef.current) {
-
                 mapInstanceRef.current.flyTo([mapFocus.lat, mapFocus.lon], 13, { animate: true, duration: 1.5 });
-
                 const key = `${parseFloat(mapFocus.lat).toFixed(4)},${parseFloat(mapFocus.lon).toFixed(4)}`;
-
                 const targetMarker = markerRefs.current[key];
-
                 if (targetMarker) {
-
                     setTimeout(() => { targetMarker.openPopup(); }, 500);
-
                 }
-
             }
-
         }, [mapFocus]);
 
-
-
         return <div ref={mapContainerRef} className="w-full h-full z-0 rounded-lg shadow-inner min-h-[400px]" />;
-
     };
-
-
 
     const StatusCard = ({ title, count, colorHex, icon, onClick }) => {
-
         return (
-
             <div 
-
                 onClick={onClick}
-
                 className="premium-card rounded-2xl p-5 cursor-pointer flex flex-col items-center justify-center relative overflow-hidden group select-none active:scale-95 transition-all"
-
                 style={{ borderBottom: `4px solid ${colorHex}` }}
-
             >
-
                 <div className="absolute top-2 right-2 opacity-5 group-hover:opacity-10 transition-opacity">
-
                     {React.cloneElement(icon, { size: 48 })}
-
                 </div>
-
                 <div className="flex items-center gap-2 text-[10px] font-bold mb-3 uppercase tracking-wider" style={{ color: colorHex }}>
-
                     {icon} {title}
-
                 </div>
-
                 <div className="text-3xl xl:text-4xl font-black text-slate-800 leading-none mb-2 tabular-nums">{count}</div>
-
                 <div className="text-[11px] text-slate-400 font-medium mb-4">รายการทั้งหมด</div>
-
                 <div className="w-full h-px bg-slate-50 mb-3"></div>
-
                 <div className="text-[10px] text-indigo-600 font-bold flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50/50 rounded-full group-hover:bg-indigo-600 group-hover:text-white transition-all">
-
                     <Icons.ClipboardList size={12} /> ดูราย ภ.จว.
-
                 </div>
-
             </div>
-
         );
-
     };
 
-
-
     const Dashboard = () => {
-
         const [activeTab, setActiveTab] = useState('tracker');
-
         const ADMIN_PIN = "8888";
-
         const [isDashboardAuthorized, setIsDashboardAuthorized] = useState(false);
-
         const [authModalOpen, setAuthModalOpen] = useState(false);
-
         const [pinInput, setPinInput] = useState("");
-
         const [pinError, setPinError] = useState(false);
-
         
-
-        // �Ÿ�� State สำหรับจัดการ Custom Alert Pop-up
-
+        // 🚨 State สำหรับจัดการ Custom Alert Pop-up
         const [customAlert, setCustomAlert] = useState({ isOpen: false, title: '', message: '' });
 
-
-
         const [data, setData] = useState([]);
-
         const [taskStatus, setTaskStatus] = useState({});
-
         const [isFetchingDB, setIsFetchingDB] = useState(true);
-
         const [dbErrorMsg, setDbErrorMsg] = useState("");
 
-
-
         const [savingId, setSavingId] = useState(null);
-
         const [savingType, setSavingType] = useState(null);
-
         const [mapFocus, setMapFocus] = useState(null);
 
-
-
         const [barDetailOpen, setBarDetailOpen] = useState(false);
-
         const [barDetailInfo, setBarDetailInfo] = useState({ type: 'mule', title: '', summary: {}, mules: [], cases: [], rawItems: [] });
-
         const [modalSortConfig, setModalSortConfig] = useState({ key: 'amount', direction: 'desc' });
-
         const [modalProvinceFilter, setModalProvinceFilter] = useState(null);
 
-
-
         const [searchQuery, setSearchQuery] = useState("");
-
         const [selectedBank, setSelectedBank] = useState("All Banks");
-
         const [selectedProv, setSelectedProv] = useState("All");
-
         const [selectedBranch, setSelectedBranch] = useState("All");
-
         const [selectedType, setSelectedType] = useState("All");
-
         const [selectedStatus, setSelectedStatus] = useState("All");
-
         const [selectedRespProv, setSelectedRespProv] = useState("All");
-
         const [selectedRespStation, setSelectedRespStation] = useState("All");
-
         const [startDate, setStartDate] = useState("");
-
         const [endDate, setEndDate] = useState("");
-
         const [startTime, setStartTime] = useState("");
-
         const [endTime, setEndTime] = useState("");
-
         const [muleSearch, setMuleSearch] = useState("");
 
-
-
         const [timeMode, setTimeMode] = useState('การถอน');
-
         const [bankMode, setBankMode] = useState('ยอดเงิน');
-
         const [typeMode, setTypeMode] = useState('การถอน');
-
         const [unitMode, setUnitMode] = useState('การถอน');
-
         const [topRiskMode, setTopRiskMode] = useState('ยอดเงิน');
 
-
-
         useEffect(() => {
-
             fetchDataFromDB();
-
         }, []);
 
-
-
         const handleTabClick = (tabId) => {
-
             if (tabId === 'dashboard' && !isDashboardAuthorized) {
-
                 setAuthModalOpen(true);
-
                 setPinInput("");
-
                 setPinError(false);
-
             } else {
-
                 setActiveTab(tabId);
-
             }
-
         };
-
-
 
         const handlePinSubmit = (e) => {
-
             e.preventDefault();
-
             if (pinInput === ADMIN_PIN) {
-
                 setIsDashboardAuthorized(true);
-
                 setAuthModalOpen(false);
-
                 setActiveTab('dashboard');
-
             } else {
-
                 setPinError(true);
-
                 setPinInput("");
-
             }
-
         };
 
-
-
         const fetchDataFromDB = async () => {
-
             setIsFetchingDB(true);
-
             setDbErrorMsg("");
-
             setData([]);
 
-
-
             const atmCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQbtBa4JKNf9cCMGIuRENeqixYCl7ivvoQa9GfwqZK-TQxzqGgD-_0whNetqDeLPc2XbtQyPdk9JA7W/pub?output=csv';
-
             const branchCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjS_g4qBNMdyl15pZnPUJak78DOGVJWKlhYppGGopAcgwa5ssWNN3gqLukKmSb3uQ8vwqTd3OxLaZz/pub?output=csv';
 
-
-
             const fetchAndParseCSV = async (url, sourceType) => {
-
                 try {
-
                     const response = await fetch(url);
-
                     if (!response.ok) return { _failed: true, reason: `HTTP Error: ${response.status}` };
-
                     const csvText = await response.text();
 
-
-
                     return new Promise((resolve) => {
-
                         window.Papa.parse(csvText, {
-
                             header: true,
-
                             skipEmptyLines: true,
-
                             transformHeader: function (header) {
-
                                 return header.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
-
                             },
-
                             complete: (results) => {
-
                                 resolve(results.data.map((row, index) => ({
-
                                     ...row,
-
                                     _source_type: sourceType,
-
                                     _sheet_row_index: index + 2
-
                                 })));
-
                             },
-
                             error: (err) => {
-
                                 resolve([]);
-
                             }
-
                         });
-
                     });
-
                 } catch (error) {
-
                     return { _failed: true, reason: 'การเชื่อมต่อเครือข่ายล้มเหลว' };
-
                 }
-
             };
 
-
-
             const atmData = await fetchAndParseCSV(atmCsvUrl, 'ATM');
-
             const branchData = await fetchAndParseCSV(branchCsvUrl, 'Branch');
 
-
-
             if (atmData._failed && branchData._failed) {
-
                 setDbErrorMsg("ไม่สามารถดึงข้อมูล CSV ได้ กรุณาตรวจสอบลิงก์");
-
                 setIsFetchingDB(false);
-
                 return;
-
             }
 
-
-
             const validAtm = Array.isArray(atmData) ? atmData : [];
-
             const validBranch = Array.isArray(branchData) ? branchData : [];
-
             const combinedRaw = [...validAtm, ...validBranch];
 
-
-
             const normalizedData = combinedRaw.map((item, idx) => {
-
                 let cDate = '';
-
                 let cTime = '';
-
                 const rawDT = item['วันเวลาโอน'] || item.complaint_date || item.date || '';
 
-
-
                 if (rawDT) {
-
                     const dtStr = String(rawDT).trim();
-
                     let datePart = dtStr;
-
                     let timePart = '';
-
                     if (dtStr.includes('T')) {
-
                         const parts = dtStr.split('T');
-
                         datePart = parts[0];
-
                         timePart = parts[1]?.split('.')[0] || '';
-
                     } else if (dtStr.includes(',')) {
-
                         const parts = dtStr.split(',');
-
                         datePart = parts[0].trim();
-
                         timePart = parts[1]?.trim() || '';
-
                     } else if (dtStr.includes(' ')) {
-
                         const parts = dtStr.split(' ');
-
                         datePart = parts[0];
-
                         timePart = parts.slice(1).join(' ');
-
                     }
-
                     cDate = datePart;
-
                     cTime = timePart;
-
                 }
-
                 if (!cTime) cTime = item.transfer_time || item.time || '12:00:00';
 
-
-
                 let tCode = item['Tracking Code'] || item['Tracking'] || item.tracking_code || item.tracking || item['หมายเลขติดตาม'] || '-';
-
                 if (tCode === '-') tCode = item['Bank Case ID'] || item.inst_id || item.case_id || '-';
 
-
-
                 let aLoc = item['สถานที่ตั้ง'] || item['สาขา'] || item['ชื่อสาขา'] || item['สาขาที่เกิดเหตุ'] || item['สถานที่เกิดเหตุ'] || item['สถานที่ตั้งตู้'] || item['จุดติดตั้ง'] || item['รหัสเครื่อง ATM'] || item['รหัสเครื่อง'] || item.branch_name;
-
                 if (!aLoc) {
-
                     const foundBranchKey = Object.keys(item).find(k => k.includes('สาขา') || k.toLowerCase().includes('branch'));
-
                     if (foundBranchKey) aLoc = item[foundBranchKey];
-
                 }
-
                 if (!aLoc) aLoc = item.ol3 || (item['อำเภอ/เขต'] ? item['อำเภอ/เขต'] + ' ' + (item['ตำบล/แขวง'] || '') : 'ไม่ระบุ');
 
-
-
                 let rawProv = item['ภ.จว.'] || item['ภ.จว'] || item['จังหวัด'] || item['Province'] || item['province'] || item.atm_province || '';
-
                 if (!rawProv) {
-
                     const foundKey = Object.keys(item).find(k => k.includes('จังหวัด') || k.toLowerCase().includes('prov') || k.includes('ภ.จว'));
-
                     if (foundKey) rawProv = item[foundKey];
-
                 }
-
                 let cProv = rawProv ? String(rawProv).trim() : 'ไม่ระบุ';
-
                 cProv = cProv.replace(/^จังหวัด/, '').replace(/^ภ\.จว\./, '').replace(/^ภ\.จว/, '').trim();
-
                 if (cProv === '-' || cProv === '') cProv = 'ไม่ระบุ';
 
-
-
                 let respStation = item['สน./สภ.ที่รับผิดชอบ'] || item['สน./สภ. ที่รับผิดชอบ'] || '-';
-
                 let respProv = item['ภ.จว.ที่รับผิดชอบ'] || item['ภ.จว. ที่รับผิดชอบ'] || '-';
-
                 let respRegion = item['บช.ที่รับผิดชอบ'] || item['บช. ที่รับผิดชอบ'] || '-';
 
-
-
                 return {
-
                     id: `db-${idx}`,
-
                     _sheet_row_index: item._sheet_row_index,
-
                     inst_id: item['Bank Case ID'] || item.inst_id || item.case_id || item['รหัสเครื่อง'] || item['รหัสเครื่อง ATM'] || item['สาขา'] || `GEN-${idx}`,
-
                     tracking_code: tCode,
-
                     atm_location: aLoc,
-
                     atm_name: item['ชื่อเครื่อง ATM'] || '',
-
                     branch_address: item['ที่อยู่สาขา'] || '',
-
                     source_type: item['_source_type'],
-
                     status_name: item['สถานะติดตามงาน'] || item['สถานะ'] || item.status_name || item.status || "รอรับเรื่อง",
-
                     note: item['หมายเหตุ'] || item.note || "-",
-
                     report_link: item['link คุมรายงานสืบ'] || item['link'] || "",
-
                     resp_station: respStation,
-
                     resp_prov: respProv,
-
                     resp_region: respRegion,
-
                     case_type_detail: item['_source_type'] === "ATM" ? "ถอนเงินสดผ่านตู้เอทีเอ็ม" : "ถอนเงินสดที่สาขา",
-
                     transfer_amount: item['จำนวนเงิน'] || item.transfer_amount || item.amount || 0,
-
                     complaint_date: cDate,
-
                     transfer_time: cTime,
-
                     atm_bank_code: item['เจ้าของเครื่อง'] || item['ธนาคารที่ถอน'] || item.atm_bank_code || item.bank || 'ไม่ระบุ',
-
                     atm_machinecode: item['รหัสเครื่อง ATM'] || item.atm_machinecode || item.atm_id || (item._source_type === "ATM" ? '-' : 'สาขา'),
-
                     atm_lat: item['Latitude'] || item['latitude'] || item['ละติจูด'] || item.atm_lat || item.lat || '',
-
                     atm_lon: item['Longitude'] || item['longitude'] || item['ลองจิจูด'] || item.atm_lon || item.lon || '',
-
                     atm_province: cProv,
-
                     pol_region: item['ภูธร'] || item.pol_region || 'ภ.8',
-
                     ol2: item['จังหวัด'] || item.ol2 || item.province || '',
-
                     ol3: item['อำเภอ/เขต'] ? item['อำเภอ/เขต'] + ' ' + (item['ตำบล/แขวง'] || '') : item.ol3 || 'ไม่ระบุ',
-
                     from_account_name: item['ชื่อบัญชีที่ถอน'] || item.from_account_name || item.account_name || 'ไม่ระบุ',
-
                     from_account_no: item['เลขบัญชีที่ถอน'] || item.from_account_no || item.account_no || '-',
-
                     from_bank_shortname: item['ธนาคารที่ถอน'] || item.from_bank_shortname || item.bank || '-',
-
                     from_account_layout: item['แถว'] || item.from_account_layout || "บัญชีม้า",
-
-                    // �Ÿ�� ดึงเวลาอัปเดตล่าสุดจากชีต
-
-                    last_updated: item['เวลาอัปเดตล่าสุด'] || item['เวลาอัปเดตล่าสุด'] || "",
-
+                    // 🚨 ดึงเวลาอัปเดตล่าสุดจากชีต
+                    last_updated: item['เวลาอัปเดตล่าสุด'] || "",
                     ...item
-
                 };
-
             }).filter(item => parseAmount(item.transfer_amount) > 0 || item.from_account_no !== '-');
-
-
 
             setData(normalizedData);
 
-
-
             const initialStatus = {};
-
             normalizedData.forEach(item => {
-
                 if (!initialStatus[item.id]) {
-
                     initialStatus[item.id] = {
-
                         status: item.status_name || "รอรับเรื่อง",
-
                         note: item.note || "-",
-
                         report_link: item.report_link || "",
-
                         last_updated: item.last_updated || ""
-
                     };
-
                 }
-
             });
-
             setTaskStatus(initialStatus);
-
             setIsFetchingDB(false);
-
         };
-
-
 
         const updateTaskInDB = (row, newStatus, newNote, newLink, type = 'note') => {
-
             setSavingId(row.id);
-
             setSavingType(type);
 
-
-
             const payload = {
-
                 inst_id: row.inst_id,
-
                 source_type: row.source_type || row._source_type,
-
                 row_index: row._sheet_row_index,
-
                 status: newStatus,
-
                 note: newNote,
-
                 report_link: newLink,
-
                 timestamp: formatDateTime()
-
             };
 
-
-
             if (typeof google !== 'undefined' && google.script && google.script.run) {
-
                 google.script.run
-
                     .withSuccessHandler(function () {
-
                         setSavingId(null);
-
                         setSavingType(null);
-
                     })
-
                     .withFailureHandler(function (error) {
-
                         alert("เกิดข้อผิดพลาดในการบันทึก: " + error.message);
-
                         setSavingId(null);
-
                         setSavingType(null);
-
                     })
-
                     .updateRecordInSheet(JSON.stringify(payload));
-
             } else {
-
                 setTimeout(() => {
-
                     setSavingId(null);
-
                     setSavingType(null);
-
                 }, 500);
-
             }
-
         };
-
-
 
         const handleCardClick = (statusName) => {
-
             const detailItems = filteredData.filter(d => {
-
                 const currentStatus = taskStatus[d.id]?.status || d.status_name || "รอรับเรื่อง";
-
                 return currentStatus === statusName;
-
             });
-
             const totalAmt = detailItems.reduce((sum, item) => sum + parseAmount(item.transfer_amount), 0);
 
-
-
             setBarDetailInfo({
-
                 type: 'task',
-
                 title: `สถานะ: ${statusName} (ทั้งหมด)`,
-
                 summary: { count: detailItems.length, amount: totalAmt },
-
                 cases: detailItems,
-
                 rawItems: detailItems
-
             });
-
             setModalSortConfig({ key: 'transfer_amount', direction: 'desc' });
-
             setModalProvinceFilter(null);
-
             setBarDetailOpen(true);
-
         };
-
-
 
         const handleBarClick = (dataEntry, chartType, subType = null) => {
-
             if (!dataEntry) return;
-
             const entry = dataEntry.payload || dataEntry;
-
             let title = "";
-
             let detailItems = [];
-
             let modalType = 'mule';
 
-
-
             if (chartType === 'time') {
-
                 title = `หมวดหมู่เวลา: ${entry.hour} น.`;
-
                 detailItems = filteredData.filter(d => {
-
                     const h = getHourFromTime(d.transfer_time);
-
                     return h !== null && `${h.toString().padStart(2, '0')}:00` === entry.hour;
-
                 });
-
             } else if (chartType === 'bank') {
-
                 title = `ธนาคาร: ${entry.name}`;
-
                 detailItems = filteredData.filter(d => (d.atm_bank_code || "Unknown") === entry.name);
-
             } else if (chartType === 'type') {
-
                 title = `รูปแบบการถอนเงิน: ${entry.name}`;
-
                 detailItems = filteredData.filter(d => {
-
                     const t = d.case_type_detail.includes('เอทีเอ็ม') ? "ถอนเงินสดผ่านตู้เอทีเอ็ม" : "ถอนเงินสดที่สาขา";
-
                     return t === entry.name;
-
                 });
-
             } else if (chartType === 'unit') {
-
                 title = `หน่วยงาน/จังหวัด: ${entry.name}`;
-
                 detailItems = filteredData.filter(d => {
-
                     const u = d.atm_province && d.atm_province !== "Unknown" ? d.atm_province : "ไม่ระบุ";
-
                     return u.replace(/^จังหวัด/, '').replace(/^ภ\.จว\./, '').replace(/^ภ\.จว/, '').trim() === entry.name;
-
                 });
-
             } else if (chartType === 'task-prov') {
-
                 modalType = 'task';
-
                 const clickedStatus = subType;
-
                 title = `จังหวัด: ${entry.name} | สถานะ: ${clickedStatus}`;
-
                 detailItems = filteredData.filter(d => {
-
                     const prov = d.atm_province && d.atm_province !== "Unknown" && d.atm_province !== "ไม่ระบุ" ? d.atm_province.replace(/^จังหวัด/, '').replace(/^ภ\.จว\./, '').replace(/^ภ\.จว/, '').trim() : "ไม่ระบุ";
-
                     const currentStatus = taskStatus[d.id]?.status || d.status_name || "รอรับเรื่อง";
-
                     return prov === entry.name && currentStatus === clickedStatus;
-
                 });
-
                 const totalAmt = detailItems.reduce((sum, item) => sum + parseAmount(item.transfer_amount), 0);
-
                 setBarDetailInfo({ type: modalType, title, summary: { count: detailItems.length, amount: totalAmt }, cases: detailItems, rawItems: detailItems });
-
                 setModalSortConfig({ key: 'transfer_amount', direction: 'desc' });
-
                 setBarDetailOpen(true);
-
                 return;
-
             } else if (chartType === 'status') {
-
                 modalType = 'task';
-
                 title = `สถานะ: ${entry.name}`;
-
                 detailItems = filteredData.filter(d => {
-
                     const currentStatus = taskStatus[d.id]?.status || d.status_name || "รอรับเรื่อง";
-
                     return currentStatus === entry.name;
-
                 });
-
                 const totalAmt = detailItems.reduce((sum, item) => sum + parseAmount(item.transfer_amount), 0);
-
                 setBarDetailInfo({ type: modalType, title, summary: { count: detailItems.length, amount: totalAmt }, cases: detailItems, rawItems: detailItems });
-
                 setModalSortConfig({ key: 'transfer_amount', direction: 'desc' });
-
                 setBarDetailOpen(true);
-
                 return;
-
             }
-
-
 
             const mules = {};
-
             detailItems.forEach(d => {
-
                 const key = d.from_account_no;
-
                 if (!key || key === '-') return;
-
                 if (!mules[key]) mules[key] = { name: d.from_account_name, accNo: key, bank: d.from_bank_shortname, count: 0, amount: 0, types: new Set(), provinces: new Set() };
-
                 mules[key].count += 1;
-
                 mules[key].amount += parseAmount(d.transfer_amount);
-
                 if (d.case_type_detail.includes("เอทีเอ็ม") || d._source_type === "ATM") mules[key].types.add("ATM");
-
                 else mules[key].types.add("สาขา");
-
                 const p = d.atm_province && d.atm_province !== "Unknown" && d.atm_province !== "ไม่ระบุสถานที่" ? d.atm_province.replace(/^จังหวัด/, '').replace(/^ภ\.จว\./, '').replace(/^ภ\.จว/, '').trim() : "ไม่ระบุ";
-
                 mules[key].provinces.add(p);
-
             });
-
-
 
             const mulesArray = Object.values(mules).map(m => ({
-
                 ...m, typeStr: Array.from(m.types).join(', '), provinceStr: Array.from(m.provinces).join(', ')
-
             })).sort((a, b) => b.amount - a.amount);
 
-
-
             setBarDetailInfo({ type: modalType, title, summary: { count: entry.count, amount: entry.amount || 0 }, mules: mulesArray, rawItems: detailItems });
-
             setModalSortConfig({ key: 'amount', direction: 'desc' });
-
             setModalProvinceFilter(null);
-
             setBarDetailOpen(true);
-
         };
-
-
 
         const provinceBreakdown = useMemo(() => {
-
             if (!barDetailInfo.rawItems) return [];
-
             const counts = {};
-
             barDetailInfo.rawItems.forEach(d => {
-
                 let p = d.atm_province && d.atm_province !== "Unknown" && d.atm_province !== "ไม่ระบุ" ? d.atm_province.replace(/^จังหวัด/, '').replace(/^ภ\.จว\./, '').replace(/^ภ\.จว/, '').trim() : "ไม่ระบุ";
-
                 if (!counts[p]) counts[p] = 0;
-
                 counts[p]++;
-
             });
-
             return Object.entries(counts).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
-
         }, [barDetailInfo.rawItems]);
 
-
-
         const downloadCSV = () => {
-
             let csvContent = "\uFEFF";
-
             let rows = [];
-
             if (barDetailInfo.type === 'task') {
-
                 rows.push(["ลำดับ", "Tracking", "รูปแบบ", "ธนาคารที่ถอน", "สถานที่/สาขาที่เกิดเหตุ", "Latitude", "Longitude", "จังหวัด", "วันที่ร้องเรียน", "เวลา", "ยอดความเสียหาย (บาท)", "สน./สภ. ที่รับผิดชอบ", "ภ.จว. ที่รับผิดชอบ", "สถานะ", "หมายเหตุ", "ลิงก์รายงาน"].join(","));
-
                 sortedModalCases.forEach((row, idx) => {
-
                     const status = taskStatus[row.id]?.status || row.status_name || "รอรับเรื่อง";
-
                     const note = taskStatus[row.id]?.note || row.note || "-";
-
                     const link = taskStatus[row.id]?.report_link || row.report_link || "";
-
                     const amount = parseAmount(row.transfer_amount);
-
                     const prov = row.atm_province ? row.atm_province.replace(/^จังหวัด/, '').replace(/^ภ\.จว\./, '').trim() : 'ไม่ระบุ';
-
                     const bank = row.atm_bank_code || 'ไม่ระบุ';
-
                     const lat = row.atm_lat || '';
-
                     const lon = row.atm_lon || '';
-
                     rows.push([idx + 1, `"${row.tracking_code}"`, `"${row.case_type_detail}"`, `"${bank}"`, `"${row.atm_location}"`, `"${lat}"`, `"${lon}"`, `"${prov}"`, `"${row.complaint_date}"`, `"${row.transfer_time || ''}"`, amount, `"${row.resp_station}"`, `"${row.resp_prov}"`, `"${status}"`, `"${note}"`, `"${link}"`].join(","));
-
                 });
-
             } else {
-
                 rows.push(["ลำดับ", "ชื่อบัญชีม้า", "เลขที่บัญชี", "ธนาคาร", "ประเภท", "จังหวัดที่ถอน", "รับโอน (ครั้ง)", "ยอดรวม (บาท)"].join(","));
-
                 sortedModalMules.forEach((mule, idx) => {
-
                     rows.push([idx + 1, `"${mule.name}"`, `="'${mule.accNo}"`, `"${mule.bank}"`, `"${mule.typeStr}"`, `"${mule.provinceStr}"`, mule.count, mule.amount].join(","));
-
                 });
-
             }
-
             csvContent += rows.join(String.fromCharCode(10));
-
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-
             const url = URL.createObjectURL(blob);
-
             const link = document.createElement("a");
-
             link.setAttribute("href", url);
-
             let safeTitle = barDetailInfo.title.replace(/[^a-zA-Z0-9ก-๙]/g, '_');
-
             link.setAttribute("download", `Export_Data_${safeTitle}.csv`);
-
             document.body.appendChild(link);
-
             link.click();
-
             document.body.removeChild(link);
-
             URL.revokeObjectURL(url);
-
         };
-
-
 
         const sortedModalMules = useMemo(() => {
-
             if (barDetailInfo.type !== 'mule' || !barDetailInfo.mules) return [];
-
             let sortableItems = [...barDetailInfo.mules];
-
             if (modalSortConfig !== null) {
-
                 sortableItems.sort((a, b) => {
-
                     if (a[modalSortConfig.key] < b[modalSortConfig.key]) return modalSortConfig.direction === 'asc' ? -1 : 1;
-
                     if (a[modalSortConfig.key] > b[modalSortConfig.key]) return modalSortConfig.direction === 'asc' ? 1 : -1;
-
                     return 0;
-
                 });
-
             }
-
             return sortableItems;
-
         }, [barDetailInfo, modalSortConfig]);
 
-
-
         const sortedModalCases = useMemo(() => {
-
             if (barDetailInfo.type !== 'task' || !barDetailInfo.cases) return [];
-
             let filteredItems = barDetailInfo.cases;
-
             if (modalProvinceFilter) {
-
                 filteredItems = filteredItems.filter(row => {
-
                     const prov = row.atm_province ? row.atm_province.replace(/^จังหวัด/, '').replace(/^ภ\.จว\./, '').replace(/^ภ\.จว/, '').trim() : 'ไม่ระบุ';
-
                     return prov === modalProvinceFilter;
-
                 });
-
             }
-
             let sortableItems = [...filteredItems];
-
             if (modalSortConfig !== null) {
-
                 sortableItems.sort((a, b) => {
-
                     let valA = a[modalSortConfig.key];
-
                     let valB = b[modalSortConfig.key];
-
                     if (modalSortConfig.key === 'transfer_amount') { valA = parseAmount(valA); valB = parseAmount(valB); }
-
                     if (valA < valB) return modalSortConfig.direction === 'asc' ? -1 : 1;
-
                     if (valA > valB) return modalSortConfig.direction === 'asc' ? 1 : -1;
-
                     return 0;
-
                 });
-
             }
-
             return sortableItems;
-
         }, [barDetailInfo, modalSortConfig, modalProvinceFilter]);
 
-
-
         const requestModalSort = (key) => {
-
             let direction = 'desc';
-
             if (modalSortConfig.key === key && modalSortConfig.direction === 'desc') direction = 'asc';
-
             setModalSortConfig({ key, direction });
-
         };
 
-
-
         const branchOptions = useMemo(() => {
-
             let validData = data;
-
             if (selectedProv !== "All") validData = validData.filter(d => d.atm_province === selectedProv);
-
             if (selectedType !== "All") validData = validData.filter(d => d.case_type_detail === selectedType);
-
             const set = new Set(validData.map(d => d.atm_location).filter(l => l && l !== 'ไม่ระบุ'));
-
             return Array.from(set).sort();
-
         }, [data, selectedProv, selectedType]);
 
-
-
         const typeOptions = useMemo(() => {
-
             const set = new Set(data.map(d => d.case_type_detail).filter(Boolean));
-
             return Array.from(set).sort();
-
         }, [data]);
-
-
 
         const statusOptions = useMemo(() => {
-
             const set = new Set(Object.values(taskStatus).map(s => s.status));
-
             ["รอรับเรื่อง", "อยู่ระหว่างสืบสวน", "จัดทำรายงานสืบแล้ว", "ส่งคืนต้นสังกัดแล้ว", "ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก..."].forEach(s => set.add(s));
-
             return Array.from(set);
-
         }, [taskStatus]);
 
-
-
         const respProvOptions = useMemo(() => {
-
             const set = new Set(data.map(d => d.resp_prov).filter(p => p && p !== '-'));
-
             return Array.from(set).sort();
-
         }, [data]);
 
-
-
         const respStationOptions = useMemo(() => {
-
             let validData = data;
-
             if (selectedRespProv !== "All") validData = validData.filter(d => d.resp_prov === selectedRespProv);
-
             const set = new Set(validData.map(d => d.resp_station).filter(s => s && s !== '-'));
-
             return Array.from(set).sort();
-
         }, [data, selectedRespProv]);
 
-
-
         const filteredData = useMemo(() => {
-
             return data.filter(item => {
-
                 if (selectedBank !== "All Banks" && item.atm_bank_code !== selectedBank) return false;
-
                 if (selectedProv !== "All" && item.atm_province !== selectedProv) return false;
-
                 if (selectedBranch !== "All" && item.atm_location !== selectedBranch) return false;
-
                 if (selectedType !== "All" && item.case_type_detail !== selectedType) return false;
-
                 if (selectedRespProv !== "All" && item.resp_prov !== selectedRespProv) return false;
-
                 if (selectedRespStation !== "All" && item.resp_station !== selectedRespStation) return false;
 
-
-
                 const currentStatus = taskStatus[item.id]?.status || item.status_name || "รอรับเรื่อง";
-
                 if (selectedStatus !== "All" && currentStatus !== selectedStatus) return false;
 
-
-
                 if (startDate || endDate) {
-
                     const itemDate = parseDateLocal(item.complaint_date);
-
                     if (itemDate) {
-
                         if (startDate) { const sDate = parseDateLocal(startDate); if (sDate && itemDate < sDate) return false; }
-
                         if (endDate) { const eDate = parseDateLocal(endDate); if (eDate && itemDate > eDate) return false; }
-
                     } else return false;
-
                 }
-
-
 
                 if (startTime || endTime) {
-
                     const timeStr = formatTime(item.transfer_time);
-
                     if (timeStr) {
-
                         if (startTime && timeStr < startTime) return false;
-
                         if (endTime && timeStr > endTime) return false;
-
                     } else return false;
-
                 }
-
-
 
                 if (searchQuery) {
-
                     const q = searchQuery.toLowerCase();
-
                     return (item.tracking_code?.toLowerCase().includes(q) || item.from_account_name?.toLowerCase().includes(q) || item.from_account_no?.includes(q) || item.atm_location?.toLowerCase().includes(q) || item.resp_station?.toLowerCase().includes(q));
-
                 }
-
                 return true;
-
             });
-
         }, [data, selectedBank, selectedProv, selectedBranch, selectedType, selectedStatus, selectedRespProv, selectedRespStation, startDate, endDate, startTime, endTime, searchQuery, taskStatus]);
 
-
-
         const totalAmount = useMemo(() => filteredData.reduce((s, i) => s + parseAmount(i.transfer_amount), 0), [filteredData]);
-
         const totalCases = useMemo(() => {
-
             const uniqueCases = new Set(filteredData.map(d => d.tracking_code).filter(c => c && c !== '-'));
-
             return uniqueCases.size > 0 ? uniqueCases.size : filteredData.length;
-
         }, [filteredData]);
-
         const totalTransactions = filteredData.length;
 
-
-
         const timeStats = useMemo(() => {
-
             const hours = Array.from({ length: 24 }, (_, i) => ({ hour: `${i.toString().padStart(2, '0')}:00`, count: 0, amount: 0 }));
-
             filteredData.forEach(d => {
-
                 const h = getHourFromTime(d.transfer_time);
-
                 if (h !== null && h >= 0 && h < 24) { hours[h].count += 1; hours[h].amount += parseAmount(d.transfer_amount); }
-
             });
-
             return hours;
-
         }, [filteredData]);
-
-
 
         const bankStats = useMemo(() => {
-
             const stats = {};
-
             filteredData.forEach(d => {
-
                 const b = d.atm_bank_code || "Unknown";
-
                 if (!stats[b]) stats[b] = { name: b, count: 0, amount: 0 };
-
                 stats[b].count += 1;
-
                 stats[b].amount += parseAmount(d.transfer_amount);
-
             });
-
             return Object.values(stats);
-
         }, [filteredData]);
-
         const sortedBankStats = useMemo(() => [...bankStats].sort((a, b) => bankMode === 'ยอดเงิน' ? b.amount - a.amount : b.count - a.count).slice(0, 8), [bankStats, bankMode]);
 
-
-
         const typeStats = useMemo(() => {
-
             const stats = { "ถอนเงินสดผ่านตู้เอทีเอ็ม": { name: "ถอนเงินสดผ่านตู้เอทีเอ็ม", count: 0, amount: 0 }, "ถอนเงินสดที่สาขา": { name: "ถอนเงินสดที่สาขา", count: 0, amount: 0 } };
-
             filteredData.forEach(d => {
-
                 const type = d.case_type_detail.includes('เอทีเอ็ม') ? "ถอนเงินสดผ่านตู้เอทีเอ็ม" : "ถอนเงินสดที่สาขา";
-
                 stats[type].count += 1;
-
                 stats[type].amount += parseAmount(d.transfer_amount);
-
             });
-
             return Object.values(stats).sort((a, b) => typeMode === 'ยอดเงิน' ? b.amount - a.amount : b.count - a.count);
-
         }, [filteredData, typeMode]);
 
-
-
         const unitStats = useMemo(() => {
-
             const stats = {};
-
             filteredData.forEach(d => {
-
                 let u = d.atm_province && d.atm_province !== "Unknown" && d.atm_province !== "ไม่ระบุ" ? d.atm_province : "ไม่ระบุ";
-
                 u = u.replace(/^จังหวัด/, '').trim();
-
                 if (!stats[u]) stats[u] = { name: u, count: 0, amount: 0 };
-
                 stats[u].count += 1;
-
                 stats[u].amount += parseAmount(d.transfer_amount);
-
             });
-
             return Object.values(stats).sort((a, b) => unitMode === 'ยอดเงิน' ? b.amount - a.amount : b.count - a.count).slice(0, 8);
-
         }, [filteredData, unitMode]);
 
-
-
         const atmStats = useMemo(() => {
-
             const stats = {};
-
             filteredData.forEach(d => {
-
                 const loc = d.atm_location || "ไม่ระบุ";
-
                 const prov = d.atm_province || "";
-
                 const key = `${loc}-${prov}`;
-
                 if (!stats[key]) stats[key] = { location: loc, province: prov, count: 0, amount: 0, lat: parseFloat(d.atm_lat) || null, lon: parseFloat(d.atm_lon) || null };
-
                 stats[key].count += 1;
-
                 stats[key].amount += parseAmount(d.transfer_amount);
-
                 if (!stats[key].lat && !isNaN(parseFloat(d.atm_lat))) { stats[key].lat = parseFloat(d.atm_lat); stats[key].lon = parseFloat(d.atm_lon); }
-
             });
-
             return Object.values(stats);
-
         }, [filteredData]);
-
         const sortedAtmStats = useMemo(() => [...atmStats].sort((a, b) => topRiskMode === 'ยอดเงิน' ? b.amount - a.amount : b.count - a.count).slice(0, 10), [atmStats, topRiskMode]);
 
-
-
         const trackerStats = useMemo(() => {
-
             const stats = { "รอรับเรื่อง": 0, "อยู่ระหว่างสืบสวน": 0, "จัดทำรายงานสืบแล้ว": 0, "ส่งคืนต้นสังกัดแล้ว": 0, "ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก...": 0 };
-
             filteredData.forEach(d => { const s = taskStatus[d.id]?.status || "รอรับเรื่อง"; if (stats[s] !== undefined) stats[s]++; });
-
             return stats;
-
         }, [filteredData, taskStatus]);
-
         const totalCompleted = useMemo(() => trackerStats["จัดทำรายงานสืบแล้ว"] + trackerStats["ส่งคืนต้นสังกัดแล้ว"], [trackerStats]);
-
         const successRate = useMemo(() => totalTransactions > 0 ? Math.round((totalCompleted / totalTransactions) * 100) : 0, [totalCompleted, totalTransactions]);
 
-
-
         const trackerChartData = useMemo(() => {
-
             const provinceMap = {};
-
             filteredData.forEach(d => {
-
                 const prov = d.atm_province && d.atm_province !== "Unknown" && d.atm_province !== "ไม่ระบุ" ? d.atm_province.replace(/^จังหวัด/, '').replace(/^ภ\.จว\./, '').replace(/^ภ\.จว/, '').trim() : "ไม่ระบุ";
-
                 if (!provinceMap[prov]) provinceMap[prov] = { name: prov, "รอรับเรื่อง": 0, "อยู่ระหว่างสืบสวน": 0, "จัดทำรายงานสืบแล้ว": 0, "ส่งคืนต้นสังกัดแล้ว": 0, "ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก...": 0, total: 0 };
-
                 const s = taskStatus[d.id]?.status || d.status_name || "รอรับเรื่อง";
-
                 if (provinceMap[prov][s] !== undefined) { provinceMap[prov][s]++; provinceMap[prov].total++; }
-
             });
-
             return Object.values(provinceMap).sort((a, b) => b.total - a.total).slice(0, 10);
-
         }, [filteredData, taskStatus]);
-
-
 
         const muleStats = useMemo(() => {
-
             const stats = {};
-
             filteredData.forEach(d => {
-
                 const key = d.from_account_no;
-
                 if (!key || key === '-') return;
-
                 if (!stats[key]) stats[key] = { name: d.from_account_name, accNo: key, bank: d.from_bank_shortname, count: 0, amount: 0 };
-
                 stats[key].count += 1;
-
                 stats[key].amount += parseAmount(d.transfer_amount);
-
             });
-
             let res = Object.values(stats).sort((a, b) => b.amount - a.amount);
-
             if (muleSearch) {
-
                 const q = muleSearch.toLowerCase();
-
                 res = res.filter(m => m.name.toLowerCase().includes(q) || m.accNo.includes(q));
-
             }
-
             return res;
-
         }, [filteredData, muleSearch]);
 
-
-
         const responsibleStats = useMemo(() => {
-
             const stats = {};
-
             filteredData.forEach(d => {
-
                 const st = d.resp_station && d.resp_station !== '-' ? d.resp_station : 'ไม่ระบุ';
-
                 const pr = d.resp_prov && d.resp_prov !== '-' ? d.resp_prov : 'ไม่ระบุ';
-
                 const key = `${st}-${pr}`;
-
                 if (!stats[key]) stats[key] = { station: st, prov: pr, count: 0, amount: 0, pending: 0, completed: 0 };
-
                 stats[key].count += 1;
-
                 stats[key].amount += parseAmount(d.transfer_amount);
-
                 const currentStatus = taskStatus[d.id]?.status || d.status_name || "รอรับเรื่อง";
-
                 if (currentStatus === 'จัดทำรายงานสืบแล้ว' || currentStatus === 'ส่งคืนต้นสังกัดแล้ว') stats[key].completed += 1;
-
                 else stats[key].pending += 1;
-
             });
-
             return Object.values(stats).sort((a, b) => b.count - a.count);
-
         }, [filteredData, taskStatus]);
 
-
-
         const ChartToggle = ({ options, active, onChange }) => (
-
             <div className="flex bg-slate-100 rounded border border-slate-200 p-0.5 text-[10px] font-medium z-10">
-
                 {options.map(opt => (
-
                     <button key={opt} onClick={() => onChange(opt)} className={`px-3 py-1 rounded transition-colors ${active === opt ? 'bg-white shadow-sm text-[#f97316] font-bold' : 'text-slate-500 hover:text-slate-700'}`}>
-
                         {opt}
-
                     </button>
-
                 ))}
-
             </div>
-
         );
-
-
 
         const renderFilterBar = () => (
-
             <div className="glass-panel p-5 md:p-6 rounded-[2rem] shadow-xl border border-white/40 mb-8 animate-fade-slide-up w-full relative overflow-hidden">
-
                 <div className="absolute top-0 right-0 -m-8 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl"></div>
-
                 <div className="absolute bottom-0 left-0 -m-8 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl"></div>
-
                 
-
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 relative z-10">
-
                     <div className="col-span-2 md:col-span-4 lg:col-span-2">
-
                         <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block"> ค้นหาแบบไว </label>
-
                         <div className="relative group">
-
                             <Icons.Search className="absolute left-3.5 top-3 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={16} />
-
                             <input type="text" placeholder="Tracking, บัญชีม้า, สาขา..." className="w-full pl-10 pr-4 py-3 bg-white/50 border border-slate-200 rounded-2xl text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none placeholder:text-slate-300" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-
                         </div>
-
                     </div>
-
                     <div className="col-span-1 lg:col-span-1">
-
                         <label className="text-[11px] font-bold text-indigo-500 uppercase tracking-widest mb-2 flex items-center gap-1.5"> <Icons.Building size={14} /> ธนาคาร</label>
-
                         <select className="w-full border border-slate-200 rounded-2xl px-3 py-3 text-sm bg-white/80 text-slate-700 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer font-medium" value={selectedBank} onChange={e => setSelectedBank(e.target.value)}>
-
                             <option value="All Banks"> ทั้งหมด </option>
-
                             {Object.keys(BANK_COLORS).map(b => <option key={b} value={b}>{b}</option>)}
-
                         </select>
-
                     </div>
-
                     <div className="col-span-1 lg:col-span-1">
-
                         <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block"> พื้นที่(ภ.จว.) </label>
-
                         <select className="w-full border border-slate-200 rounded-2xl px-3 py-3 text-sm bg-white/80 text-slate-700 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer font-medium" value={selectedProv} onChange={e => { setSelectedProv(e.target.value); setSelectedBranch("All"); }}>
-
                             <option value="All"> ทั้งหมด </option>
-
                             {REGION_8_PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
-
                         </select>
-
                     </div>
-
                     <div className="col-span-1 lg:col-span-1">
-
                         <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block"> สถานที่ / ตู้ </label>
-
                         <select className="w-full border border-slate-200 rounded-2xl px-3 py-3 text-sm bg-white/80 text-slate-700 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer font-medium" value={selectedBranch} onChange={e => setSelectedBranch(e.target.value)}>
-
                             <option value="All"> ทั้งหมด </option>
-
                             {branchOptions.map(b => <option key={b} value={b}>{b}</option>)}
-
                         </select>
-
                     </div>
-
                     <div className="col-span-1 lg:col-span-1">
-
                         <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block"> รูปแบบ </label>
-
                         <select className="w-full border border-slate-200 rounded-2xl px-3 py-3 text-sm bg-white/80 text-slate-700 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer font-medium" value={selectedType} onChange={e => { setSelectedType(e.target.value); setSelectedBranch("All"); }}>
-
                             <option value="All"> ทั้งหมด </option>
-
                             {typeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-
                         </select>
-
                     </div>
 
-
-
                     <div className="col-span-1 lg:col-span-2">
-
                         <label className="text-[11px] font-bold text-amber-500 uppercase tracking-widest mb-2 flex items-center gap-1.5"> <Icons.Shield size={14} /> ภ.จว.ที่รับผิดชอบ</label>
-
                         <select className="w-full border border-amber-200 rounded-2xl px-3 py-3 text-sm bg-amber-50/30 text-amber-900 outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all cursor-pointer font-medium" value={selectedRespProv} onChange={e => { setSelectedRespProv(e.target.value); setSelectedRespStation("All"); }}>
-
                             <option value="All"> ทั้งหมด </option>
-
                             {respProvOptions.map(p => <option key={p} value={p}>{p}</option>)}
-
                         </select>
-
                     </div>
-
                     <div className="col-span-1 lg:col-span-2">
-
                         <label className="text-[11px] font-bold text-amber-500 uppercase tracking-widest mb-2 flex items-center gap-1.5"> <Icons.Shield size={14} /> สน./สภ.ที่รับผิดชอบ </label>
-
                         <select className="w-full border border-amber-200 rounded-2xl px-3 py-3 text-sm bg-amber-50/30 text-amber-900 outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all cursor-pointer font-medium" value={selectedRespStation} onChange={e => setSelectedRespStation(e.target.value)}>
-
                             <option value="All"> ทั้งหมด </option>
-
                             {respStationOptions.map(s => <option key={s} value={s}>{s}</option>)}
-
                         </select>
-
                     </div>
-
-
 
                     <div className="col-span-2 lg:col-span-2">
-
                         <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block"> สถานะติดตามงาน </label>
-
                         <select
-
                             className={`w-full rounded-2xl px-3 py-3 text-sm outline-none transition-all font-bold cursor-pointer border ${selectedStatus === 'All' ? 'bg-white/80 border-slate-200 text-slate-600' : getStatusColorClass(selectedStatus)}`}
-
                             value={selectedStatus}
-
                             onChange={e => setSelectedStatus(e.target.value)}
-
                         >
-
                             <option value="All" className="bg-white text-slate-700"> ทั้งหมด </option>
-
                             {statusOptions.map(s => <option key={s} value={s} className="bg-white text-slate-700">{s}</option>)}
-
                         </select>
-
                     </div>
-
                 </div>
-
-
 
                 <div className="flex flex-col md:flex-row items-start md:items-end gap-5 mt-6 pt-6 border-t border-slate-100/50">
-
                     <div className="flex gap-3 items-center w-full md:w-auto">
-
                         <div className="flex-1 md:flex-none">
-
                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block"> เริ่มต้น </label>
-
                             <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full md:w-40 px-3 py-2 bg-white/50 border border-slate-200 rounded-xl text-xs outline-none text-slate-600 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all" />
-
                         </div>
-
                         <div className="mt-5 text-slate-200 font-bold hidden md:block"> / </div>
-
                         <div className="flex-1 md:flex-none">
-
                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block"> สิ้นสุด </label>
-
                             <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} min={startDate} className="w-full md:w-40 px-3 py-2 bg-white/50 border border-slate-200 rounded-xl text-xs outline-none text-slate-600 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all" />
-
                         </div>
-
                     </div>
-
                     <div className="flex gap-3 items-center w-full md:w-auto">
-
                         <div className="flex-1 md:flex-none">
-
                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block"> เวลาเริ่ม </label>
-
                             <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="w-full md:w-32 px-3 py-2 bg-white/50 border border-slate-200 rounded-xl text-xs outline-none text-slate-600 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all" />
-
                         </div>
-
                         <div className="mt-5 text-slate-200 font-bold hidden md:block"> / </div>
-
                         <div className="flex-1 md:flex-none">
-
                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block"> เวลาจบ </label>
-
                             <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="w-full md:w-32 px-3 py-2 bg-white/50 border border-slate-200 rounded-xl text-xs outline-none text-slate-600 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all" />
-
                         </div>
-
                     </div>
-
                     
-
                     <div className="flex gap-3 w-full md:w-auto">
-
                         {(startDate || endDate || startTime || endTime || selectedBranch !== "All" || selectedType !== "All" || selectedStatus !== "All" || selectedProv !== "All" || selectedRespProv !== "All" || selectedRespStation !== "All" || searchQuery) && (
-
                             <button 
-
                                 onClick={() => { setStartDate(""); setEndDate(""); setStartTime(""); setEndTime(""); setSelectedBranch("All"); setSelectedType("All"); setSelectedStatus("All"); setSelectedProv("All"); setSelectedRespProv("All"); setSelectedRespStation("All"); setSearchQuery(""); }}
-
                                 className="flex-1 md:flex-none px-4 py-2.5 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-2 border border-red-100"
-
                             >
-
                                 <Icons.Refresh size={14} /> ล้างตัวกรอง
-
                             </button>
-
                         )}
-
                         <button className="flex-1 md:flex-none px-5 py-2.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-200">
-
                              ประมวลผลใหม่
-
                         </button>
-
                     </div>
-
                 </div>
-
             </div>
-
         );
-
-
 
         return (
-
             <div className="min-h-screen text-slate-800 font-sans flex flex-col bg-[#f8fafc] bg-gradient-to-b from-slate-50 to-slate-100">
-
                 <header className="bg-slate-900/90 backdrop-blur-xl text-white sticky top-0 z-[100] border-b border-white/10 shadow-2xl shadow-slate-900/20">
-
                     <div className="container mx-auto px-4 md:px-8 py-4 flex flex-col xl:flex-row justify-between items-center gap-6">
-
                         <div className="flex items-center gap-4 self-start xl:self-auto group cursor-pointer">
-
                             <div className="bg-gradient-to-br from-yellow-400 to-amber-600 text-slate-900 p-2.5 rounded-2xl shadow-lg shadow-yellow-500/20 group-hover:scale-110 transition-transform duration-300 ring-4 ring-yellow-500/10"> <Icons.Shield size={28} /></div>
-
                             <div>
-
                                 <h1 className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-200 leading-none tracking-tight"> ระบบติดตามงาน ภ.8 </h1>
-
                                 <p className="text-[10px] text-slate-400 mt-1.5 uppercase font-black tracking-[0.2em] opacity-80"> Financial Crime Intelligence Unit </p>
-
                             </div>
-
                         </div>
-
                         <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 w-full xl:w-auto">
-
                             <nav className="flex bg-slate-950/50 backdrop-blur-md rounded-2xl p-1.5 border border-white/5 shadow-inner w-full md:w-auto overflow-x-auto no-scrollbar scroll-smooth">
-
                                 {[
-
                                     { id: 'dashboard', label: 'DASHBOARD', icon: <Icons.LayoutDashboard size={14} />, locked: !isDashboardAuthorized },
-
                                     { id: 'mule', label: 'MULE ACCOUNTS', icon: <Icons.Users size={14} /> },
-
                                     { id: 'tracker', label: 'TASK TRACKER', icon: <Icons.ClipboardList size={14} /> },
-
                                     { id: 'responsible', label: 'RESPONSIBLE UNITS', icon: <Icons.Shield size={14} /> }
-
                                 ].map(tab => (
-
                                     <button 
-
                                         key={tab.id} 
-
                                         onClick={() => handleTabClick(tab.id)}
-
                                         className={`px-5 py-2.5 rounded-xl text-[11px] font-black transition-all duration-300 flex items-center justify-center gap-2 flex-1 md:flex-none tracking-widest ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 ring-1 ring-white/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-
                                     >
-
                                         {tab.locked ? <Icons.Lock size={14} className="text-amber-400" /> : tab.icon}
-
                                         <span className="md:inline">{tab.label}</span>
-
                                     </button>
-
                                 ))}
-
                             </nav>
-
                             <div className="flex flex-wrap justify-center md:justify-end gap-3 w-full md:w-auto">
-
                                 <button 
-
                                     onClick={fetchDataFromDB} 
-
                                     disabled={isFetchingDB} 
-
                                     className="group flex items-center gap-2.5 px-5 py-2.5 bg-indigo-500/10 hover:bg-indigo-500 text-indigo-400 hover:text-white text-[11px] font-black rounded-2xl transition-all duration-300 disabled:opacity-50 border border-indigo-500/20 hover:border-indigo-500 shadow-lg shadow-indigo-500/5 hover:shadow-indigo-500/20 uppercase tracking-widest"
-
                                 >
-
                                     {isFetchingDB ? <div className="loader w-3 h-3 border-2 border-current border-t-transparent animate-spin"></div> : <Icons.Refresh size={16} className="group-hover:rotate-180 transition-transform duration-500" />} 
-
                                     REFRESH DB
-
                                 </button>
-
                                 <button className="flex items-center gap-2.5 px-5 py-2.5 bg-slate-800 hover:bg-indigo-600 text-slate-200 hover:text-white border border-slate-700 hover:border-indigo-500 text-[11px] font-black rounded-2xl transition-all duration-300 shadow-lg shadow-slate-900/20 uppercase tracking-widest">
-
                                     <Icons.Upload size={16} className="text-indigo-400 group-hover:text-white" /> UPLOAD CSV
-
                                 </button>
-
                                 <button className="flex items-center gap-2.5 px-5 py-2.5 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 hover:border-red-500 text-[11px] font-black rounded-2xl transition-all duration-300 shadow-lg shadow-red-500/5 uppercase tracking-widest">
-
                                     <Icons.Download size={16}/> PRINT REPORT
-
                                 </button>
-
                             </div>
-
                         </div>
-
                     </div>
-
                 </header>
 
-
-
                 <main className="container mx-auto px-4 md:px-6 py-6 flex-1 flex flex-col w-full max-w-full overflow-hidden">
-
                     {isFetchingDB && data.length === 0 && (
-
                         <div className="flex flex-col items-center justify-center flex-1 animate-in fade-in duration-300">
-
                             <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-
                             <div className="text-slate-700 font-bold text-lg"> กำลังโหลดข้อมูล...</div>
-
                         </div>
-
                     )}
-
-
 
                     {dbErrorMsg && !isFetchingDB && data.length === 0 && (
-
                         <div className="flex flex-col items-center justify-center flex-1 animate-in slide-in-from-bottom-4 duration-300 max-w-2xl mx-auto text-center">
-
                             <div className="bg-red-100 text-red-500 p-4 rounded-full mb-4"> <Icons.AlertTriangle size={48} /></div>
-
                             <h2 className="text-2xl font-bold text-slate-800 mb-2"> ไม่สามารถดึงข้อมูลได้ </h2>
-
                             <p className="text-slate-600 mb-6"> สาเหตุ: <span className="font-mono text-red-600 bg-red-50 px-2 py-1 rounded"> {dbErrorMsg} </span></p>
-
                             <button onClick={fetchDataFromDB} className="mt-6 flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow-lg">
-
                                 <Icons.Refresh size={18}/> ลองดึงข้อมูลอีกครั้ง
-
                             </button>
-
                         </div>
-
                     )}
-
-
 
                     {!isFetchingDB && data.length > 0 && (
-
                         <>
-
                             {activeTab === 'dashboard' && (
-
                                 <div className="w-full">
-
                                     {renderFilterBar()}
-
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6 animate-fade-slide-up" style={{ animationDelay: '0.1s' }}>
-
                                         <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col justify-center relative overflow-hidden hover-lift">
-
                                             <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-300 rounded-l-2xl"></div>
-
                                             <div className="text-xs text-slate-500 font-medium mb-1 ml-3"> ยอดความเสียหายรวม </div>
-
                                             <div className="text-2xl xl:text-3xl font-bold text-slate-800 ml-3 truncate" title={formatMoney(totalAmount)}> {formatMoney(totalAmount)} </div>
-
                                         </div>
-
                                         <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col justify-center relative overflow-hidden hover-lift">
-
                                             <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-300 rounded-l-2xl"></div>
-
                                             <div className="text-xs text-slate-500 font-medium mb-1 ml-3"> จำนวนคดี(Tracking Code) </div>
-
                                             <div className="text-3xl font-bold text-slate-800 ml-3"> {totalCases} </div>
-
                                         </div>
-
                                         <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col justify-center relative overflow-hidden hover-lift">
-
                                             <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-300 rounded-l-2xl"></div>
-
                                             <div className="text-xs text-slate-500 font-medium mb-1 ml-3"> การถอน - กดเงิน(ครั้ง) </div>
-
                                             <div className="text-3xl font-bold text-slate-800 ml-3"> {totalTransactions} </div>
-
                                         </div>
-
                                         <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col justify-center relative overflow-hidden hover-lift">
-
                                             <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-300 rounded-l-2xl"></div>
-
                                             <div className="text-xs text-slate-500 font-medium mb-1 ml-3"> Top ATM / Branch </div>
-
                                             <div className="text-[15px] xl:text-[17px] font-bold text-slate-800 truncate ml-3 leading-tight" title={sortedAtmStats.length > 0 ? sortedAtmStats[0].location : "-"}>
-
                                                 {sortedAtmStats.length > 0 ? sortedAtmStats[0].location : "-"}
-
                                             </div>
-
                                         </div>
-
                                     </div>
-
-
 
                                     <div className="bg-white p-4 md:p-6 rounded-2xl border border-slate-200/60 shadow-sm mb-6 flex flex-col animate-fade-slide-up w-full" style={{ animationDelay: '0.2s' }}>
-
                                         <div className="flex justify-between items-center mb-6">
-
                                             <div className="flex items-center gap-2">
-
                                                 <Icons.Clock size={18} className="text-slate-700" />
-
                                                 <h3 className="text-[14px] font-bold text-slate-800"> ช่วงเวลาเกิดเหตุ(Time Analysis) </h3>
-
                                             </div>
-
                                             <ChartToggle options={['การถอน', 'ยอดเงิน']} active={timeMode} onChange={setTimeMode} />
-
                                         </div>
-
                                         <div className="w-full h-[250px] md:h-[300px]">
-
                                             <ResponsiveContainer width="100%" height="100%">
-
                                                 <BarChart data={timeStats} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-
                                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-
                                                     <XAxis dataKey="hour" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={{ stroke: '#cbd5e1' }} tickLine={false} />
-
                                                     <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
-
                                                     <Tooltip content={<ChartTooltip />} cursor={{ fill: '#f1f5f9' }} />
-
                                                     <Bar dataKey={timeMode === 'ยอดเงิน' ? 'amount' : 'count'} fill="#f97316" radius={[4, 4, 0, 0]} onClick={(d) => handleBarClick(d, 'time')} />
-
                                                 </BarChart>
-
                                             </ResponsiveContainer>
-
                                         </div>
-
                                     </div>
-
-
 
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 animate-fade-slide-up w-full" style={{ animationDelay: '0.3s' }}>
-
                                         <div className="col-span-1 bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col w-full">
-
                                             <div className="flex justify-between items-center mb-4">
-
                                                 <h3 className="text-[14px] font-bold text-slate-800"> ธนาคาร(Top Banks) </h3>
-
                                                 <ChartToggle options={['การถอน', 'ยอดเงิน']} active={bankMode} onChange={setBankMode} />
-
                                             </div>
-
                                             <div className="w-full h-[250px]">
-
                                                 <ResponsiveContainer width="100%" height="100%">
-
                                                     <BarChart data={sortedBankStats} layout="vertical" margin={{ top: 0, right: 20, left: 10, bottom: 0 }}>
-
                                                         <XAxis type="number" hide />
-
                                                         <YAxis type="category" dataKey="name" width={40} tick={{ fontSize: 10, fill: '#64748b' }} axisLine={{ stroke: '#cbd5e1' }} tickLine={false} />
-
                                                         <Tooltip content={<ChartTooltip />} cursor={{ fill: '#f1f5f9' }} />
-
                                                         <Bar dataKey={bankMode === 'ยอดเงิน' ? 'amount' : 'count'} barSize={16} radius={[0, 4, 4, 0]} onClick={(d) => handleBarClick(d, 'bank')}>
-
                                                             {sortedBankStats.map((entry, index) => (<Cell key={`cell-${index}`} fill={BANK_COLORS[entry.name] || '#94a3b8'} />))}
-
                                                         </Bar>
-
                                                     </BarChart>
-
                                                 </ResponsiveContainer>
-
                                             </div>
-
                                         </div>
-
                                         <div className="col-span-1 bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col w-full">
-
                                             <div className="flex justify-between items-center mb-4">
-
                                                 <h3 className="text-[14px] font-bold text-slate-800"> รูปแบบการถอนเงิน </h3>
-
                                                 <ChartToggle options={['การถอน', 'ยอดเงิน']} active={typeMode} onChange={setTypeMode} />
-
                                             </div>
-
                                             <div className="w-full h-[250px]">
-
                                                 <ResponsiveContainer width="100%" height="100%">
-
                                                     <BarChart data={typeStats} layout="vertical" margin={{ top: 0, right: 20, left: 60, bottom: 0 }}>
-
                                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} vertical={true} stroke="#e2e8f0" />
-
                                                         <XAxis type="number" hide />
-
                                                         <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 10, fill: '#64748b' }} axisLine={{ stroke: '#cbd5e1' }} tickLine={false} />
-
                                                         <Tooltip content={<ChartTooltip />} cursor={{ fill: '#f1f5f9' }} />
-
                                                         <Bar dataKey={typeMode === 'ยอดเงิน' ? 'amount' : 'count'} fill="#8b5cf6" barSize={18} radius={[0, 4, 4, 0]} onClick={(d) => handleBarClick(d, 'type')} />
-
                                                     </BarChart>
-
                                                 </ResponsiveContainer>
-
                                             </div>
-
                                         </div>
-
                                         <div className="col-span-1 bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col w-full">
-
                                             <div className="flex justify-between items-center mb-4">
-
                                                 <h3 className="text-[14px] font-bold text-slate-800"> แยกตามหน่วยงาน </h3>
-
                                                 <ChartToggle options={['การถอน', 'ยอดเงิน']} active={unitMode} onChange={setUnitMode} />
-
                                             </div>
-
                                             <div className="w-full h-[250px]">
-
                                                 <ResponsiveContainer width="100%" height="100%">
-
                                                     <BarChart data={unitStats} layout="vertical" margin={{ top: 0, right: 20, left: 50, bottom: 0 }}>
-
                                                         <XAxis type="number" hide />
-
                                                         <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 10, fill: '#64748b' }} axisLine={{ stroke: '#cbd5e1' }} tickLine={false} />
-
                                                         <Tooltip content={<ChartTooltip />} cursor={{ fill: '#f1f5f9' }} />
-
                                                         <Bar dataKey={unitMode === 'ยอดเงิน' ? 'amount' : 'count'} fill="#3b82f6" barSize={12} radius={[0, 4, 4, 0]} onClick={(d) => handleBarClick(d, 'unit')} />
-
                                                     </BarChart>
-
                                                 </ResponsiveContainer>
-
                                             </div>
-
                                         </div>
-
                                     </div>
-
-
 
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8 animate-fade-slide-up w-full" style={{ animationDelay: '0.4s' }}>
-
                                         <div className="col-span-1 lg:col-span-2 bg-white rounded-3xl border border-slate-200/60 shadow-xl shadow-slate-200/40 flex flex-col h-[400px] lg:h-[600px] overflow-hidden w-full transition-all">
-
                                             <div className="p-4 md:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-
                                                 <h3 className="text-[14px] font-bold text-slate-800 flex items-center gap-2"> <Icons.MapPin size={16} className="text-blue-500" /> แผนที่จุดถอนเงิน(ATM / สาขา) </h3>
-
                                                 <div className="flex items-center gap-3 text-[10px] text-slate-500">
-
                                                     <div className="flex items-center gap-1.5"> <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444] shadow-sm"> </span> สูง</div>
-
                                                     <div className="flex items-center gap-1.5"> <span className="w-2.5 h-2.5 rounded-full bg-[#f97316] shadow-sm"> </span> กลาง</div>
-
                                                     <div className="flex items-center gap-1.5"> <span className="w-2.5 h-2.5 rounded-full bg-[#3b82f6] shadow-sm"> </span> ปกติ</div>
-
                                                     <span className="text-slate-400 ml-1 border-l pl-2 hidden sm:inline">* ขนาดจุดแปรผันตามความถี่ </span>
-
                                                 </div>
-
                                             </div>
-
                                             <div className="flex-1 relative bg-slate-100 p-2 w-full">
-
                                                 <LeafletMap data={filteredData} mapFocus={mapFocus} />
-
                                             </div>
-
                                         </div>
-
                                         <div className="col-span-1 bg-white rounded-3xl border border-slate-200/60 shadow-xl shadow-slate-200/40 h-[400px] lg:h-[600px] flex flex-col overflow-hidden w-full transition-all">
-
                                             <div className="p-4 md:p-5 border-b border-slate-100 flex justify-between items-center">
-
                                                 <h3 className="text-[14px] font-bold text-slate-800"> Top High Value / Risk </h3>
-
                                                 <ChartToggle options={['การถอน', 'ยอดเงิน']} active={topRiskMode} onChange={setTopRiskMode} />
-
                                             </div>
-
                                             <div className="flex-1 overflow-auto w-full">
-
                                                 <table className="w-full text-xs text-left min-w-[300px]">
-
                                                     <thead className="bg-slate-50 text-[10px] text-slate-500 sticky top-0 uppercase border-b border-slate-200 z-10 shadow-sm">
-
                                                         <tr>
-
                                                             <th className="px-4 md:px-5 py-3 font-bold whitespace-nowrap"> LOCATION </th>
-
                                                             <th className="px-2 py-3 font-bold text-center whitespace-nowrap"> ความถี่ </th>
-
                                                             <th className="px-4 md:px-5 py-3 font-bold text-right whitespace-nowrap"> ยอดรวม </th>
-
                                                         </tr>
-
                                                     </thead>
-
                                                     <tbody className="divide-y divide-slate-100">
-
                                                         {sortedAtmStats.map((stat, idx) => (
-
                                                             <tr key={idx} className="hover:bg-slate-50 transition-colors">
-
                                                                 <td className="px-4 md:px-5 py-4">
-
                                                                     <div className="font-bold text-[#1e40af] text-[11px] mb-1 flex items-center gap-1.5">
-
                                                                         <span className="truncate w-24 sm:w-32" title={stat.location}> {stat.location} </span>
-
                                                                         {stat.lat && stat.lon && (
-
                                                                             <button 
-
                                                                                 onClick={() => setMapFocus({ lat: stat.lat, lon: stat.lon, id: stat.location })}
-
                                                                                 className="p-1 hover:bg-blue-100 rounded text-blue-500 hover:text-blue-700 transition-colors"
-
                                                                                 title="ดูบนแผนที่"
-
                                                                             >
-
                                                                                 <Icons.MapIcon size={14} className="flex-shrink-0" />
-
                                                                             </button>
-
                                                                         )}
-
                                                                     </div>
-
                                                                     <div className="text-[10px] text-slate-500 flex items-center gap-1">
-
                                                                         <Icons.Building size={10} className="text-slate-400 shrink-0" />
-
                                                                         <span className="truncate"> {stat.province} </span>
-
                                                                     </div>
-
                                                                 </td>
-
                                                                 <td className="px-2 py-4 text-center font-bold text-slate-700"> {stat.count} </td>
-
                                                                 <td className="px-4 md:px-5 py-4 text-right font-bold text-[#e11d48]"> {formatMoney(stat.amount)} </td>
-
                                                             </tr>
-
                                                         ))}
-
                                                     </tbody>
-
                                                 </table>
-
                                             </div>
-
                                         </div>
-
                                     </div>
-
                                 </div>
-
                             )}
-
-
 
                             {activeTab === 'mule' && (
-
                                 <div className="animate-fade-slide-up w-full">
-
                                     {renderFilterBar()}
-
                                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mb-8 w-full">
-
                                         <div className="col-span-1 bg-white p-6 rounded-3xl border border-red-100 shadow-xl shadow-red-200/20 relative overflow-hidden group hover:-translate-y-2 transition-all duration-300">
-
                                             <div className="absolute right-[-10px] bottom-[-10px] text-red-50/50 group-hover:scale-110 transition-transform duration-500"> <Icons.Activity size={120} /></div>
-
                                             <div className="text-[10px] text-red-400 font-black uppercase tracking-widest mb-2 relative z-10"> MOST FREQUENT RECEIVER </div>
-
                                             <div className="text-xl font-black text-slate-800 mb-2 relative z-10 truncate tracking-tight"> {muleStats.length > 0 ? muleStats[0].name : "-"} </div>
-
                                             <div className="text-3xl font-black text-[#e11d48] relative z-10 tabular-nums"> {muleStats.length > 0 ? muleStats[0].count : 0} <span className="text-[14px] font-bold text-slate-400 uppercase tracking-widest ml-1"> TIMES </span></div>
-
                                         </div>
-
                                         <div className="col-span-1 bg-white p-6 rounded-3xl border border-indigo-100 shadow-xl shadow-indigo-200/20 relative overflow-hidden group hover:-translate-y-2 transition-all duration-300">
-
                                             <div className="absolute right-[-10px] bottom-[-10px] text-indigo-50/50 group-hover:scale-110 transition-transform duration-500"> <Icons.DollarSign size={120} /></div>
-
                                             <div className="text-[10px] text-indigo-400 font-black uppercase tracking-widest mb-2 relative z-10"> HIGHEST TOTAL AMOUNT </div>
-
                                             <div className="text-xl font-black text-slate-800 mb-2 relative z-10 truncate tracking-tight"> {muleStats.length > 0 ? muleStats.sort((a, b) => b.amount - a.amount)[0].name : "-"} </div>
-
                                             <div className="text-3xl font-black text-[#4f46e5] relative z-10 truncate tabular-nums"> {formatMoney(muleStats.length > 0 ? muleStats.sort((a, b) => b.amount - a.amount)[0].amount : 0)} <span className="text-[14px] font-bold text-slate-400 uppercase tracking-widest ml-1"> THB </span></div>
-
                                         </div>
-
                                         <div className="col-span-1 sm:col-span-2 md:col-span-1 bg-white p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/20 relative overflow-hidden group hover:-translate-y-2 transition-all duration-300">
-
                                             <div className="absolute right-[-10px] bottom-[-10px] text-slate-50 group-hover:scale-110 transition-transform duration-500"> <Icons.Users size={120} /></div>
-
                                             <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-2 relative z-10"> TOTAL UNIQUE MULES </div>
-
                                             <div className="text-5xl font-black text-slate-800 mb-1 relative z-10 tabular-nums tracking-tighter"> {muleStats.length} </div>
-
                                         </div>
-
                                     </div>
-
-
 
                                     <div className="bg-white rounded-3xl border border-slate-200/60 shadow-xl shadow-slate-200/40 overflow-hidden w-full transition-all">
-
                                         <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between sm:items-center bg-slate-50/30 gap-4">
-
                                             <div className="flex items-center gap-4">
-
                                                 <div className="p-3 bg-indigo-500/10 rounded-2xl text-indigo-600 shadow-inner ring-1 ring-indigo-100"> <Icons.Users size={22} /></div>
-
                                                 <div>
-
                                                     <h3 className="font-black text-slate-800 text-base tracking-tight"> รายการบัญชีม้า (Mule Accounts) </h3>
-
                                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5"> Detailed analytics of identified mule accounts </p>
-
                                                 </div>
-
                                             </div>
-
                                             <div className="relative w-full sm:w-72 group">
-
                                                 <Icons.Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={16} />
-
                                                 <input 
-
                                                     type="text" 
-
                                                     placeholder="ค้นหาชื่อ, เลขบัญชี หรือ ธนาคาร..." 
-
                                                     className="pl-12 pr-4 py-3 bg-slate-100 border-none rounded-2xl text-[12px] font-bold w-full outline-none focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all shadow-inner placeholder-slate-400" 
-
                                                     value={muleSearch} 
-
                                                     onChange={e => setMuleSearch(e.target.value)} 
-
                                                 />
-
                                             </div>
-
                                         </div>
-
                                         <div className="overflow-x-auto overflow-y-auto max-h-[600px] w-full no-scrollbar">
-
                                             <table className="w-full text-sm text-left min-w-[800px]">
-
                                                 <thead className="bg-slate-50/80 backdrop-blur-sm text-[11px] text-slate-500 font-black sticky top-0 shadow-sm z-[20] border-b border-slate-200 uppercase tracking-widest">
-
                                                     <tr>
-
                                                         <th className="px-6 py-5 text-center w-16">#</th>
-
                                                         <th className="px-6 py-5"> ชื่อบัญชี </th>
-
                                                         <th className="px-6 py-5"> เลขที่บัญชี </th>
-
                                                         <th className="px-6 py-5 text-center"> สถาบันการเงิน </th>
-
                                                         <th className="px-6 py-5 text-center"> ความถี่การโอน </th>
-
                                                         <th className="px-6 py-5 text-right"> ยอดรวมทั้งสิ้น </th>
-
                                                     </tr>
-
                                                 </thead>
-
                                                 <tbody className="divide-y divide-slate-100/80">
-
                                                     {muleStats.map((mule, idx) => (
-
                                                         <tr key={idx} className="hover:bg-indigo-50/20 transition-all duration-300 group">
-
                                                             <td className="px-6 py-5 text-center text-slate-400 font-bold tabular-nums"> {idx + 1} </td>
-
                                                             <td className="px-6 py-5">
-
                                                                 <div className="font-black text-slate-800 text-[13px] group-hover:text-indigo-600 transition-colors flex items-center gap-2">
-
                                                                     <Icons.Flame size={14} className={mule.amount > 1000000 ? "text-[#f97316] animate-pulse" : "text-slate-300"} /> {mule.name}
-
                                                                 </div>
-
                                                             </td>
-
                                                             <td className="px-6 py-5 font-mono text-slate-600 font-bold text-[12px]"> {mule.accNo} </td>
-
                                                             <td className="px-6 py-5 text-center">
-
                                                                 <span className="px-3 py-1 rounded-lg text-[10px] font-black text-white shadow-sm ring-2 ring-white/20 whitespace-nowrap" style={{ backgroundColor: BANK_COLORS[mule.bank] || '#94a3b8' }}> {mule.bank} </span>
-
                                                             </td>
-
                                                             <td className="px-6 py-5 text-center font-black text-slate-800 tabular-nums"> {mule.count} </td>
-
                                                             <td className="px-6 py-5 text-right font-black text-slate-800 tabular-nums group-hover:text-indigo-600"> {formatMoney(mule.amount)} <span className="text-[10px] font-bold text-slate-400 ml-1">฿</span></td>
-
                                                         </tr>
-
                                                     ))}
-
                                                 </tbody>
-
                                             </table>
-
                                         </div>
-
                                     </div>
-
                                 </div>
-
                             )}
-
-
 
                             {/* แท็บ Task Tracker (เพิ่มการล็อกสถานะและแสดงเวลาอัปเดตแล้ว) */}
-
                             {activeTab === 'tracker' && (
-
                                 <div className="animate-fade-slide-up w-full">
-
                                     {renderFilterBar()}
-
-
 
                                     <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5 md:p-8 mb-6 flex flex-col md:flex-row items-center gap-8 w-full">
-
                                         <div className="shrink-0 flex flex-col items-center">
-
                                             <HalfDonut percent={successRate} />
-
                                         </div>
-
                                         <div className="flex-1 w-full">
-
                                             <div className="flex items-center gap-2 mb-1">
-
                                                 <Icons.Flag size={18} className="text-blue-600"/>
-
                                                 <h3 className="font-bold text-slate-800 text-[15px]">ภาพรวมความคืบหน้าการทำงาน</h3>
-
                                             </div>
-
                                             <p className="text-[11px] text-slate-500 mb-6">คำนวณจากสัดส่วนคดีที่ "ส่งคืนต้นสังกัด/จัดทำรายงานแล้ว" เทียบกับคดีทั้งหมด</p>
-
                                             <div className="relative h-12 w-full border border-dashed border-slate-300 rounded-full bg-slate-50/50 flex items-center px-2">
-
                                                 <div 
-
                                                     className="absolute w-10 h-10 bg-blue-500 rounded-xl shadow-md flex items-center justify-center text-white z-10 transition-all duration-1000 ease-out"
-
                                                     style={{ left: `calc(${successRate}% - ${successRate > 90 ? 40 : 20}px)` }}
-
                                                 >
-
                                                     <Icons.Runner size={20} />
-
                                                 </div>
-
                                                 <div className="absolute right-6 top-0 bottom-0 border-l-2 border-dashed border-green-500"></div>
-
                                                 <div className="absolute right-4 -top-6 text-green-500"><Icons.Flag size={24} /></div>
-
                                                 <div className="absolute -bottom-6 left-2 text-[10px] font-bold text-slate-500">เริ่มต้น</div>
-
                                                 <div className="absolute -bottom-6 right-2 text-[10px] font-bold text-green-600">เส้นชัย (100%)</div>
-
                                             </div>
-
                                         </div>
-
                                     </div>
-
-
 
                                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-5 mb-6 w-full">
-
                                         <StatusCard title="คดีทั้งหมด" count={totalTransactions} colorHex="#3b82f6" icon={<Icons.Archive size={14}/>} onClick={() => handleCardClick("รอรับเรื่อง")} />
-
                                         <StatusCard title="รอรับเรื่อง" count={trackerStats["รอรับเรื่อง"]} colorHex="#f59e0b" icon={<Icons.Loader size={14}/>} onClick={() => handleCardClick("รอรับเรื่อง")} />
-
                                         <StatusCard title="อยู่ระหว่างสืบสวน" count={trackerStats["อยู่ระหว่างสืบสวน"]} colorHex="#8b5cf6" icon={<Icons.SearchStatus size={14}/>} onClick={() => handleCardClick("อยู่ระหว่างสืบสวน")} />
-
                                         <StatusCard title="จัดทำรายงานสืบแล้ว" count={trackerStats["จัดทำรายงานสืบแล้ว"]} colorHex="#0ea5e9" icon={<Icons.FileText size={14}/>} onClick={() => handleCardClick("จัดทำรายงานสืบแล้ว")} />
-
                                         <StatusCard title="ส่งคืนต้นสังกัดแล้ว" count={trackerStats["ส่งคืนต้นสังกัดแล้ว"]} colorHex="#10b981" icon={<Icons.ExternalLink size={14}/>} onClick={() => handleCardClick("ส่งคืนต้นสังกัดแล้ว")} />
-
                                         <StatusCard title="ไม่พบ/ยกเลิก" count={trackerStats["ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก..."]} colorHex="#ef4444" icon={<Icons.AlertTriangle size={14}/>} onClick={() => handleCardClick("ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก...")} />
-
                                     </div>
-
-
 
                                     <div className="bg-white p-4 md:p-6 rounded-2xl border border-slate-200/60 shadow-sm mb-6 flex flex-col w-full">
-
                                         <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center mb-6 gap-3">
-
                                             <h3 className="text-[14px] font-bold text-slate-800 flex items-center gap-2">
-
                                                 <Icons.Activity size={18} className="text-indigo-500 shrink-0" />
-
-                                                สถานะงานแยกตามจังหวัด(คลิกแท่งกรา�Ÿเพื่อดูคดี)
-
+                                                สถานะงานแยกตามจังหวัด(คลิกแท่งกราฟเพื่อดูคดี)
                                             </h3>
-
                                             <div className="flex flex-wrap items-center gap-2 md:gap-4 text-[10px] md:text-[11px] font-medium bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-
                                                 <span className="flex items-center gap-1.5"> <div className="w-2.5 h-2.5 rounded bg-[#f59e0b]"></div> รอรับเรื่อง</span>
-
                                                 <span className="flex items-center gap-1.5"> <div className="w-2.5 h-2.5 rounded bg-[#8b5cf6]"></div> สืบสวน</span>
-
                                                 <span className="flex items-center gap-1.5"> <div className="w-2.5 h-2.5 rounded bg-[#0ea5e9]"></div> รายงานแล้ว</span>
-
                                                 <span className="flex items-center gap-1.5"> <div className="w-2.5 h-2.5 rounded bg-[#10b981]"></div> ส่งคืน</span>
-
                                                 <span className="flex items-center gap-1.5"> <div className="w-2.5 h-2.5 rounded bg-[#ef4444]"></div> ไม่พบ/ยกเลิก</span>
-
                                             </div>
-
                                         </div>
-
                                         <div className="w-full h-[300px] md:h-[400px]">
-
                                             <ResponsiveContainer width="100%" height="100%">
-
                                                 <BarChart data={trackerChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-
                                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-
                                                     <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b', fontWeight: 'bold' }} axisLine={{ stroke: '#cbd5e1' }} tickLine={false} />
-
                                                     <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} allowDecimals={false} />
-
                                                     <Tooltip content={<TaskChartTooltip />} cursor={{ fill: '#f1f5f9' }} />
-
                                                     <Bar dataKey="รอรับเรื่อง" stackId="a" fill="#f59e0b" onClick={(d) => handleBarClick(d, 'task-prov', 'รอรับเรื่อง')} style={{ cursor: 'pointer' }} />
-
                                                     <Bar dataKey="อยู่ระหว่างสืบสวน" stackId="a" fill="#8b5cf6" onClick={(d) => handleBarClick(d, 'task-prov', 'อยู่ระหว่างสืบสวน')} style={{ cursor: 'pointer' }} />
-
                                                     <Bar dataKey="จัดทำรายงานสืบแล้ว" stackId="a" fill="#0ea5e9" onClick={(d) => handleBarClick(d, 'task-prov', 'จัดทำรายงานสืบแล้ว')} style={{ cursor: 'pointer' }} />
-
                                                     <Bar dataKey="ส่งคืนต้นสังกัดแล้ว" stackId="a" fill="#10b981" onClick={(d) => handleBarClick(d, 'task-prov', 'ส่งคืนต้นสังกัดแล้ว')} style={{ cursor: 'pointer' }} />
-
                                                     <Bar dataKey="ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก..." stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} onClick={(d) => handleBarClick(d, 'task-prov', 'ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก...')} style={{ cursor: 'pointer' }} />
-
                                                 </BarChart>
-
                                             </ResponsiveContainer>
-
                                         </div>
-
                                     </div>
-
-
 
                                     <div className="bg-white rounded-3xl border border-slate-200/60 shadow-xl shadow-slate-200/40 overflow-hidden w-full transition-all">
-
                                         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
-
                                             <div className="flex items-center gap-4">
-
                                                 <div className="p-3 bg-indigo-500/10 rounded-2xl text-indigo-600 shadow-inner ring-1 ring-indigo-100"> <Icons.ClipboardList size={22} /></div>
-
                                                 <div>
-
                                                     <h3 className="font-black text-slate-800 text-base tracking-tight"> รายการที่ต้องติดตาม </h3>
-
                                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5"> Real-time tracking from Google Sheets </p>
-
                                                 </div>
-
                                             </div>
-
                                         </div>
-
                                         <div className="overflow-x-auto overflow-y-auto max-h-[700px] w-full no-scrollbar">
-
                                             <table className="w-full text-sm text-left min-w-[900px]">
-
                                                 <thead className="bg-slate-50/80 backdrop-blur-sm text-[11px] text-slate-500 font-black sticky top-0 shadow-sm z-[20] border-b border-slate-200 uppercase tracking-wider">
-
                                                     <tr>
-
                                                         <th className="px-6 py-5 w-[10%]"> หน่วยงาน </th>
-
                                                         <th className="px-6 py-5 w-[30%]"> ATM / BRANCH / ข้อมูลคดี </th>
-
                                                         <th className="px-6 py-5 w-[15%] text-center"> สถานะงาน </th>
-
                                                         <th className="px-6 py-5 w-[22%]"> รายละเอียด/หมายเหตุ </th>
-
                                                         <th className="px-6 py-5 w-[23%] text-right"> ลิงก์รายงานสืบสวน </th>
-
                                                     </tr>
-
                                                 </thead>
-
                                                 <tbody className="divide-y divide-slate-100/80">
-
                                                     {filteredData.map((row) => {
-
                                                         const tInfo = taskStatus[row.id] || { status: "รอรับเรื่อง", note: "-", report_link: "", last_updated: "" };
-
                                                         const isSavingStatus = savingId === row.id && savingType === 'status';
-
-                                                        const isSavingNote = savingId === row.id && savingType === 'note';
-
-                                                        const isSavingLink = savingId === row.id && savingType === 'link';
-
-
-
-                                                        return (
-
-                                                            <tr key={row.id} className="hover:bg-indigo-50/20 transition-all duration-300 group font-sarabun">
-
-                                                                {/* 1. หน่วยงาน */}
-
-                                                                <td className="px-6 py-6 align-top">
-
-                                                                    <div className="flex flex-col gap-2">
-
-                                                                        <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-black border border-slate-200 w-fit uppercase tracking-wider">
-
-                                                                            {row.atm_province ? row.atm_province : 'ไม่ระบุ'}
-
-                                                                        </span>
-
-                                                                        {row.resp_station && row.resp_station !== '-' && (
-
-                                                                            <div className="flex items-center gap-1.5 bg-amber-50/50 p-2 rounded-xl border border-amber-100/50 text-amber-700">
-
-                                                                                <Icons.Shield size={12} className="shrink-0" />
-
-                                                                                <span className="text-[10px] font-bold truncate leading-tight">{row.resp_station}</span>
-
-                                                                            </div>
-
-                                                                        )}
-
-                                                                    </div>
-
-                                                                </td>
-
-
-
-                                                                {/* 2. ATM / BRANCH / ข้อมูลคดี */}
-
-                                                                <td className="px-6 py-6 align-top">
-
-                                                                    <div className="flex flex-col gap-2.5">
-
-                                                                        <div className="flex flex-wrap items-center gap-2">
-
-                                                                            <span className="font-black text-indigo-600 font-mono tracking-tighter text-[13px] inline-block px-2 py-0.5 bg-indigo-50 rounded-md ring-1 ring-indigo-100"> {row.tracking_code} </span>
-
-                                                                            <span className="font-black text-red-600 text-[13px] tabular-nums flex items-center gap-1"> 
-
-                                                                                {formatMoney(parseAmount(row.transfer_amount))} 
-
-                                                                                <span className="text-[10px] font-bold text-slate-400">฿</span>
-
-                                                                            </span>
-
-                                                                        </div>
-
-                                                                        
-
-                                                                        <div className="font-bold text-slate-800 text-[13px] leading-snug line-clamp-2" title={row.atm_location}> {row.atm_location} </div>
-
-                                                                        
-
-                                                                        <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-
-                                                                            <Icons.Clock size={10} className="shrink-0" /> {row.complaint_date} <span className="text-slate-300">|</span> {row.transfer_time} น.
-
-                                                                        </div>
-
-
-
-                                                                        <div className="space-y-1.5 border-t border-slate-100 pt-2.5 mt-0.5">
-
-                                                                            <div className="text-[11px] text-slate-700 flex items-center gap-2 font-bold">
-
-                                                                                <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
-
-                                                                                    <Icons.Users size={10} />
-
-                                                                                </div>
-
-                                                                                <span className="truncate"> {row.from_account_name} </span>
-
-                                                                            </div>
-
-                                                                            <div className="text-[10px] text-slate-500 font-mono flex items-center pl-7 gap-2">
-
-                                                                                {row.from_account_no}
-
-                                                                                <span className="px-2 py-0.5 rounded-md text-[9px] font-black text-white shadow-sm" style={{ backgroundColor: BANK_COLORS[row.from_bank_shortname] || '#94a3b8' }}>
-
-                                                                                    {row.from_bank_shortname}
-
-                                                                                </span>
-
-                                                                            </div>
-
-                                                                        </div>
-
-                                                                    </div>
-
-                                                                </td>
-
-
-
-                                                                {/* 3. สถานะงาน */}
-
-                                                                <td className="px-4 py-6 align-top text-center relative">
-
-                                                                    <div className="pt-1">
-
+                                                                                <td className="px-6 py-6 align-top text-center relative">
+                                                                    <div className="inline-block relative">
                                                                         <CustomStatusSelect 
-
                                                                             value={tInfo.status}
-
                                                                             isSaving={isSavingStatus}
-
                                                                             onChange={(newStatus) => {
-
                                                                                 if (newStatus === 'จัดทำรายงานสืบแล้ว' && (!tInfo.report_link || !tInfo.report_link.startsWith('http'))) {
-
                                                                                     setCustomAlert({
-
                                                                                         isOpen: true,
-
                                                                                         title: "ไม่สามารถเปลี่ยนสถานะได้!",
-
-                                                                                        message: "กรุณาระบุ 'ลิงก์รายงานสืบ' ในช่องด้านขวามือให้ถูกต้องก่อนครับ"
-
+                                                                                        message: "กรุณาระบุ 'ลิงก์รายงานสืบ' (ต้องขึ้นต้นด้วย http:// หรือ https://) ในช่องด้านขวามือให้ถูกต้องก่อนครับ"
                                                                                     });
-
                                                                                     return;
-
                                                                                 }
-
                                                                                 if (newStatus === 'ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก...' && (!tInfo.note || tInfo.note.trim() === '' || tInfo.note === '-')) {
-
                                                                                     setCustomAlert({
-
                                                                                         isOpen: true,
-
                                                                                         title: "ไม่สามารถเปลี่ยนสถานะได้!",
-
-                                                                                        message: "กรุณาระบุ 'หมายเหตุ' เพื่ออธิบายสาเหตุที่ไม่พบ ก่อนครับ"
-
+                                                                                        message: "กรุณาระบุ 'หมายเหตุ' เพื่ออธิบายสาเหตุที่ไม่พบ หรือ ไม่สามารถดำเนินการได้ ก่อนครับ"
                                                                                     });
-
                                                                                     return;
+                                                                                }
+                                                                                const now = new Date().toLocaleString('th-TH');
+                                                                                setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], status: newStatus, last_updated: now } }));
+                                                                                updateTaskInDB(row, newStatus, tInfo.note, tInfo.report_link, 'status');
+                                                                            }}
+                                                                        />
+                                                                    </div>
+                                                                </td>
 
+                                                                                <span className="font-black text-indigo-600 font-mono tracking-tighter text-[13px] inline-block px-2 py-0.5 bg-indigo-50 rounded-md"> {row.tracking_code} </span>
+                                                                                <span className="font-black text-red-600 text-[13px] tabular-nums"> {formatMoney(parseAmount(row.transfer_amount))} <span className="text-[10px] font-bold text-slate-400">฿</span></span>
+                                                                            </div>
+                                                                            <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">
+                                                                                <Icons.Clock size={10} /> {row.complaint_date} <span className="text-slate-300">|</span> {row.transfer_time}
+                                                                            </div>
+                                                                            <div className="space-y-1.5 border-t border-slate-100 pt-2.5">
+                                                                                <div className="text-[11px] text-slate-700 flex items-center gap-2 font-bold">
+                                                                                    <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 scroll-none">
+                                                                                        <Icons.Users size={10} />
+                                                                                    </div>
+                                                                                    <span className="truncate"> {row.from_account_name} </span>
+                                                                                </div>
+                                                                                <div className="text-[10px] text-slate-500 font-mono flex items-center pl-7 gap-2">
+                                                                                    {row.from_account_no}
+                                                                                    <span className="px-2 py-0.5 rounded-md text-[9px] font-black text-white shadow-sm ring-1 ring-black/5" style={{ backgroundColor: BANK_COLORS[row.from_bank_shortname] || '#94a3b8' }}>
+                                                                                        {row.from_bank_shortname}
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        {row.resp_station && row.resp_station !== '-' && (
+                                                                            <div className="flex items-center gap-2.5 bg-amber-50/50 p-2.5 rounded-xl border border-amber-100 shadow-sm transition-all group-hover:bg-amber-100 group-hover:shadow-md group-hover:shadow-amber-200/20">
+                                                                                <div className="p-1.5 bg-amber-100 rounded-lg text-amber-600">
+                                                                                    <Icons.Shield size={14} />
+                                                                                </div>
+                                                                                <div className="overflow-hidden">
+                                                                                    <div className="text-[11px] font-black text-amber-800 leading-none truncate"> {row.resp_station} </div>
+                                                                                    <div className="text-[9px] text-amber-600 font-bold uppercase tracking-wider mt-1 opacity-70"> RESPONSIBLE UNIT </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-4 py-3.5 align-top text-center relative pt-5">
+                                                                    <div className="mt-0.5">
+                                                                        <CustomStatusSelect 
+                                                                            value={tInfo.status}
+                                                                            isSaving={isSavingStatus}
+                                                                            onChange={(newStatus) => {
+                                                                                // 🚨 1. เงื่อนไข: เปลี่ยนเป็น "จัดทำรายงานสืบแล้ว" ต้องมีลิงก์ HTTP
+                                                                                if (newStatus === 'จัดทำรายงานสืบแล้ว' && (!tInfo.report_link || !tInfo.report_link.startsWith('http'))) {
+                                                                                    setCustomAlert({
+                                                                                        isOpen: true,
+                                                                                        title: "ไม่สามารถเปลี่ยนสถานะได้!",
+                                                                                        message: "กรุณาระบุ 'ลิงก์รายงานสืบ' (ต้องขึ้นต้นด้วย http:// หรือ https://) ในช่องด้านขวามือให้ถูกต้องก่อนครับ"
+                                                                                    });
+                                                                                    return; // หยุดการทำงาน
                                                                                 }
 
-                                                                                  const now = formatDateTime();
-
+                                                                                // 🚨 2. เงื่อนไข: เปลี่ยนเป็น "ไม่พบ..." ต้องมีหมายเหตุ
+                                                                                if (newStatus === 'ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก...' && (!tInfo.note || tInfo.note.trim() === '' || tInfo.note === '-')) {
+                                                                                    setCustomAlert({
+                                                                                        isOpen: true,
+                                                                                        title: "ไม่สามารถเปลี่ยนสถานะได้!",
+                                                                                        message: "กรุณาระบุ 'หมายเหตุ' เพื่ออธิบายสาเหตุที่ไม่พบ หรือ ไม่สามารถดำเนินการได้ ก่อนครับ"
+                                                                                    });
+                                                                                    return; // หยุดการทำงาน
+                                                                                }
+                                                                                
+                                                                                const now = new Date().toLocaleString('th-TH');
                                                                                 setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], status: newStatus, last_updated: now } }));
-
                                                                                 updateTaskInDB(row, newStatus, tInfo.note, tInfo.report_link, 'status');
-
                                                                             }}
-
                                                                         />
-
                                                                     </div>
-
                                                                 </td>
-
-
-
-                                                                {/* 4. รายละเอียด/หมายเหตุ */}
-
                                                                 <td className="px-6 py-6 align-top">
-
-                                                                    <div className="relative group/input">
-
-                                                                        <textarea 
-
-                                                                            rows="3"
-
-                                                                            className="bg-slate-50 border border-slate-200 text-[12px] font-medium rounded-2xl px-4 py-3 w-full outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 focus:bg-white shadow-inner placeholder-slate-400 transition-all resize-none group-hover/input:bg-white"
-
-                                                                            placeholder="ระบุหมายเหตุเพิ่มเติม..."
-
-                                                                            value={tInfo.note === "-" ? "" : tInfo.note}
-
-                                                                            onChange={(e) => setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], note: e.target.value } }))}
-
-                                                                            onBlur={(e) => {
-
-                                                                                  const now = formatDateTime();
-
-                                                                                setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], last_updated: now } }));
-
-                                                                                updateTaskInDB(row, tInfo.status, e.target.value, tInfo.report_link, 'note');
-
-                                                                            }}
-
-                                                                        />
-
-                                                                        <div className="absolute right-3 bottom-3 text-slate-300">
-
-                                                                            {isSavingNote ? <div className="loader w-3.5 h-3.5 border-2 border-indigo-500 border-t-transparent animate-spin"></div> : <Icons.Save size={14} className="group-focus-within/input:text-indigo-400 transition-colors" />}
-
-                                                                        </div>
-
-                                                                    </div>
-
-                                                                </td>
-
-
-
-                                                                {/* 5. ลิงก์รายงานสืบสวน */}
-
-                                                                <td className="px-6 py-6 align-top">
-
-                                                                    <div className="flex flex-col gap-3 w-full items-end">
-
-                                                                        <div className="relative w-full">
-
-                                                                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-
-                                                                                <Icons.Link size={12} />
-
-                                                                            </div>
-
-                                                                            <input
-
-                                                                                type="url"
-
-                                                                                className="bg-slate-50 border border-slate-200 text-[11px] font-bold rounded-xl pl-9 pr-4 py-2.5 w-full outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 focus:bg-white shadow-inner placeholder-slate-400 transition-all"
-
-                                                                                placeholder="วางลิงก์ที่นี่..."
-
-                                                                                value={tInfo.report_link}
-
-                                                                                onChange={(e) => setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], report_link: e.target.value } }))}
-
+                                                                    <div className="flex flex-col gap-2 w-full group/input">
+                                                                        <div className="relative">
+                                                                            <textarea 
+                                                                                rows="3"
+                                                                                className="bg-slate-50 border border-slate-200 text-[12px] font-medium rounded-2xl px-4 py-3 w-full outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 focus:bg-white shadow-inner placeholder-slate-400 transition-all resize-none group-hover/input:bg-white"
+                                                                                placeholder="ระบุรายละเอียดหรือหมายเหตุเพิ่มเติม..."
+                                                                                value={tInfo.note === "-" ? "" : tInfo.note}
+                                                                                onChange={(e) => setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], note: e.target.value } }))}
                                                                                 onBlur={(e) => {
-
-                                                                                    let val = e.target.value.trim();
-
-                                                                                    if (val !== '' && !val.startsWith('http')) {
-
-                                                                                        setCustomAlert({ isOpen: true, title: "ลิงก์ไม่ถูกต้อง!", message: "กรุณาใส่ลิงก์ที่เปิดได้ เช่น http://..." });
-
-                                                                                        val = '';
-
-                                                                                    }
-
                                                                                     const now = new Date().toLocaleString('th-TH');
-
-                                                                                    setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], report_link: val, last_updated: now } }));
-
-                                                                                    updateTaskInDB(row, tInfo.status, tInfo.note, val, 'link');
-
+                                                                                    setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], last_updated: now } }));
+                                                                                    updateTaskInDB(row, tInfo.status, e.target.value, tInfo.report_link, 'note');
                                                                                 }}
-
                                                                             />
-
-                                                                        </div>
-
-                                                                        <div className="flex items-center gap-2">
-
-                                                                            {tInfo.report_link && tInfo.report_link.startsWith('http') && (
-
-                                                                                <a href={tInfo.report_link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-1.5 text-[10px] font-black bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all shadow-md uppercase tracking-wider">
-
-                                                                                    <Icons.ExternalLink size={12} /> OPEN
-
-                                                                                </a>
-
-                                                                            )}
-
-                                                                            {isSavingLink && <div className="loader w-3.5 h-3.5 border-2 border-indigo-500 border-t-transparent animate-spin ml-1"></div>}
-
-                                                                        </div>
-
-                                                                        
-
-                                                                        {tInfo.last_updated && tInfo.last_updated !== "-" && (
-
-                                                                            <div className="text-[9px] text-slate-400 flex items-center gap-1.5 font-black uppercase tracking-widest bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200/50 shadow-sm whitespace-nowrap">
-
-                                                                                <Icons.Clock size={10} /> UPDATED: {tInfo.last_updated}
-
+                                                                            <div className="absolute right-3 bottom-3">
+                                                                                {isSavingNote ? <div className="loader w-4 h-4 border-2 border-indigo-500 border-t-transparent animate-spin"></div> : <Icons.Save size={16} className="text-slate-300 group-hover/input:text-indigo-400 transition-colors" />}
                                                                             </div>
-
-                                                                        )}
-
+                                                                        </div>
                                                                     </div>
-
                                                                 </td>
-
+                                                                <td className="px-6 py-6 align-top">
+                                                                    <div className="flex flex-col gap-3 w-full items-end">
+                                                                        <div className="relative w-full max-w-[240px]">
+                                                                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                                                                                <Icons.Link size={14} />
+                                                                            </div>
+                                                                            <input
+                                                                                type="url"
+                                                                                className="bg-slate-50 border border-slate-200 text-[11px] font-bold rounded-xl pl-10 pr-4 py-2.5 w-full outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 focus:bg-white shadow-inner placeholder-slate-400 transition-all"
+                                                                                placeholder="URL รายงานสืบสวน..."
+                                                                                value={tInfo.report_link}
+                                                                                onChange={(e) => setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], report_link: e.target.value } }))}
+                                                                                onBlur={(e) => {
+                                                                                    let val = e.target.value.trim();
+                                                                                    if (val !== '' && !val.startsWith('http')) {
+                                                                                        setCustomAlert({
+                                                                                            isOpen: true,
+                                                                                            title: "รูปแบบลิงก์ไม่ถูกต้อง!",
+                                                                                            message: "กรุณาใส่ลิงก์ที่สามารถเปิดดูได้ (ต้องขึ้นต้นด้วย http:// หรือ https://) เช่น https://drive.google.com/..."
+                                                                                        });
+                                                                                        val = '';
+                                                                                    }
+                                                                                    const now = val === '' ? "" : new Date().toLocaleString('th-TH');
+                                                                                    setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], report_link: val, last_updated: now } }));
+                                                                                    updateTaskInDB(row, tInfo.status, tInfo.note, val, 'link');
+                                                                                }}
+                                                                            />
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            {tInfo.report_link && tInfo.report_link.startsWith('http') && (
+                                                                                <a 
+                                                                                    href={tInfo.report_link}
+                                                                                    target="_blank"
+                                                                                    rel="noopener noreferrer"
+                                                                                    className="inline-flex items-center gap-2 px-4 py-2 text-[11px] font-black bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 uppercase tracking-wider"
+                                                                                >
+                                                                                    <Icons.ExternalLink size={14} /> OPEN REPORT
+                                                                                </a>
+                                                                            )}
+                                                                            {isSavingLink && <div className="loader w-4 h-4 border-2 border-indigo-500 border-t-transparent animate-spin ml-2"></div>}
+                                                                        </div>
+                                                                        
+                                                                        {tInfo.report_link && tInfo.report_link.startsWith('http') && tInfo.last_updated && tInfo.last_updated !== "-" && (
+                                                                            <div className="text-[10px] text-slate-400 flex items-center gap-1.5 font-bold uppercase tracking-wider bg-slate-100 px-2 py-1 rounded-md">
+                                                                                <Icons.Clock size={10} /> UPDATED: {tInfo.last_updated}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </td>
                                                             </tr>
-
-                                                        );
-
+                                                        ); 
                                                     })}
-
                                                 </tbody>
-
                                             </table>
-
                                         </div>
-
                                     </div>
-
                                 </div>
-
                             )}
-
-
 
                             {activeTab === 'responsible' && (
-
                                 <div className="animate-fade-slide-up w-full space-y-6">
-
                                     {renderFilterBar()}
-
                                     <div className="bg-white rounded-3xl border border-slate-200/60 shadow-xl shadow-slate-200/40 overflow-hidden w-full">
-
                                         <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between sm:items-center bg-slate-50/30 gap-4">
-
                                             <div className="flex items-center gap-4">
-
                                                 <div className="p-3 bg-amber-500/10 rounded-2xl text-amber-600 shadow-inner ring-1 ring-amber-100"> <Icons.Briefcase size={22} /></div>
-
                                                 <div>
-
                                                     <h3 className="font-black text-slate-800 text-base tracking-tight"> สรุปผลงานตามหน่วยรับผิดชอบ </h3>
-
                                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5"> Performance by Responsible Units </p>
-
                                                 </div>
-
                                             </div>
-
                                         </div>
-
                                         <div className="overflow-x-auto overflow-y-auto max-h-[700px] w-full no-scrollbar">
-
                                             <table className="w-full text-sm text-left min-w-[800px]">
-
                                                 <thead className="bg-slate-50/80 backdrop-blur-sm text-[11px] text-slate-500 font-black sticky top-0 shadow-sm z-10 border-b border-slate-200 uppercase tracking-wider">
-
                                                     <tr>
-
                                                         <th className="px-6 py-5 w-[5%] text-center"># </th>
-
                                                         <th className="px-6 py-5 w-[30%]"> สน./ สภ.ที่รับผิดชอบ </th>
-
                                                         <th className="px-6 py-5 w-[15%]"> ภ.จว.</th>
-
                                                         <th className="px-6 py-5 w-[15%] text-center"> จำนวนคดี </th>
-
                                                         <th className="px-6 py-5 w-[15%] text-right"> ยอดเสียหายรวม </th>
-
                                                         <th className="px-6 py-5 w-[20%] text-center"> ผลการดำเนินงาน </th>
-
                                                     </tr>
-
                                                 </thead>
-
                                                 <tbody className="divide-y divide-slate-100/80">
-
                                                     {responsibleStats.map((stat, idx) => {
-
                                                         const total = stat.pending + stat.completed;
-
                                                         const successPerc = total > 0 ? Math.round((stat.completed / total) * 100) : 0;
-
                                                         return (
-
                                                             <tr key={idx} className="hover:bg-indigo-50/30 transition-all duration-300 group">
-
                                                                 <td className="px-6 py-5 align-middle text-center text-slate-400 font-bold tabular-nums italic"> {String(idx + 1).padStart(2, '0')}</td>
-
                                                                 <td className="px-6 py-5 align-middle">
-
                                                                     <div className="font-black text-slate-800 text-[14px] flex items-center gap-3">
-
                                                                         <div className="p-1.5 bg-slate-100 rounded-lg group-hover:bg-amber-100 group-hover:text-amber-600 transition-colors">
-
                                                                             <Icons.Shield size={16} />
-
                                                                         </div>
-
                                                                         {stat.station}
-
                                                                     </div>
-
                                                                 </td>
-
                                                                 <td className="px-6 py-5 align-middle">
-
                                                                     <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-[11px] font-bold border border-slate-200"> {stat.prov} </span>
-
                                                                 </td>
-
                                                                 <td className="px-6 py-5 align-middle text-center">
-
                                                                     <span className="font-black text-slate-800 text-base tabular-nums"> {stat.count} </span>
-
                                                                     <span className="text-[10px] text-slate-400 font-bold ml-1 uppercase"> เคส </span>
-
                                                                 </td>
-
                                                                 <td className="px-6 py-5 align-middle text-right">
-
                                                                     <span className="font-black text-[#e11d48] text-base tabular-nums"> {formatMoney(stat.amount)} </span>
-
                                                                     <span className="text-[10px] text-slate-400 font-bold ml-1">฿</span>
-
                                                                 </td>
-
                                                                 <td className="px-6 py-5 align-middle">
-
                                                                     <div className="flex flex-col gap-2">
-
                                                                         <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-tighter">
-
                                                                             <span className="text-emerald-600"> DONE: {stat.completed} </span>
-
                                                                             <span className="text-amber-500"> PENDING: {stat.pending} </span>
-
                                                                         </div>
-
                                                                         <div className="w-full bg-slate-100 rounded-full h-2.5 flex overflow-hidden shadow-inner border border-slate-200/50 p-0.5">
-
                                                                             <div className="bg-gradient-to-r from-emerald-400 to-emerald-600 h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${successPerc}%` }}></div>
-
                                                                             <div className="bg-amber-400/20 h-full rounded-full" style={{ width: `${100 - successPerc}%` }}></div>
-
                                                                         </div>
-
                                                                     </div>
-
                                                                 </td>
-
                                                             </tr>
-
                                                         );
-
                                                     })}
-
                                                     {responsibleStats.length === 0 && (
-
                                                         <tr>
-
                                                             <td colSpan="6" className="px-6 py-16 text-center">
-
                                                                 <div className="flex flex-col items-center gap-3">
-
                                                                     <Icons.Inbox size={48} className="text-slate-200" />
-
                                                                     <p className="text-slate-400 font-bold text-sm tracking-tight"> ไม่พบข้อมูลหน่วยงานรับผิดชอบในเงื่อนไขที่ค้นหา </p>
-
                                                                 </div>
-
                                                             </td>
-
                                                         </tr>
-
                                                     )}
-
                                                 </tbody>
-
                                             </table>
-
                                         </div>
-
                                     </div>
-
                                 </div>
-
                             )}
 
-
-
                         </>
-
                     )}
-
                 </main>
 
-
-
-                {/* Modal สถิติเชิงลึก (ที่เด้งตอนคลิกกรา�Ÿ) */}
-
+                {/* Modal สถิติเชิงลึก (ที่เด้งตอนคลิกกราฟ) */}
                 {barDetailOpen && (
-
                     <div className="fixed inset-0 bg-slate-900/60 z-[200] flex items-center justify-center p-4 backdrop-blur-sm transition-all" onClick={() => { setBarDetailOpen(false); setModalProvinceFilter(null); }}>
-
                         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] border border-slate-200" onClick={e => e.stopPropagation()}>
-
                             <div className="p-4 md:p-5 bg-gradient-to-r from-[#1e293b] to-[#334155] text-white flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-3 shadow-md z-10">
-
                                 <h3 className="font-bold flex items-center gap-2.5 text-[14px] md:text-[16px]">
-
                                     <div className="bg-white/10 p-1.5 rounded-lg"> <Icons.Activity size={18} className="text-[#f97316]" /> </div>
-
                                     <span className="truncate max-w-[200px] md:max-w-md"> สถิติเชิงลึก: {barDetailInfo.title} </span>
-
                                 </h3>
-
                                 <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-
                                     <button onClick={downloadCSV} className="flex items-center gap-1.5 bg-green-600 hover:bg-green-500 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors shadow-sm border border-green-500">
-
                                         <Icons.FileDown size={14} /> Export Excel
-
                                     </button>
-
                                     <button onClick={() => { setBarDetailOpen(false); setModalProvinceFilter(null); }} className="text-slate-400 hover:text-red-400 transition-colors bg-slate-800 hover:bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center shrink-0">
-
                                         <span className="text-xl leading-none">&times; </span>
-
                                     </button>
-
                                 </div>
-
                             </div>
-
                             <div className="p-4 md:p-6 overflow-y-auto bg-slate-50/50 flex-1 w-full">
-
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5 mb-6 w-full">
-
                                     <div className="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-
                                         <div className="bg-blue-50 border border-blue-100 p-3.5 rounded-xl text-blue-600 shadow-inner shrink-0"> <Icons.Activity size={26} /></div>
-
                                         <div className="overflow-hidden">
-
                                             <div className="text-[10px] md:text-[11px] text-slate-500 font-bold mb-1 tracking-wide truncate"> จำนวนรายการ(FREQUENCY) </div>
-
                                             <div className="text-2xl md:text-3xl font-bold text-slate-800 truncate"> {barDetailInfo.summary.count} <span className="text-xs md:text-sm font-normal text-slate-500"> เคส / ครั้ง </span></div>
-
                                         </div>
-
                                     </div>
-
                                     <div className="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-
                                         <div className="bg-red-50 border border-red-100 p-3.5 rounded-xl text-red-600 shadow-inner shrink-0"> <Icons.DollarSign size={26} /></div>
-
                                         <div className="overflow-hidden">
-
                                             <div className="text-[10px] md:text-[11px] text-slate-500 font-bold mb-1 tracking-wide truncate"> ยอดความเสียหายรวม(TOTAL AMOUNT) </div>
-
                                             <div className="text-2xl md:text-3xl font-bold text-[#e11d48] truncate" title={formatMoney(barDetailInfo.summary.amount)}> {formatMoney(barDetailInfo.summary.amount)} <span className="text-xs md:text-sm font-normal text-slate-500"> บาท </span></div>
-
                                         </div>
-
                                     </div>
-
                                 </div>
-
-
 
                                 {provinceBreakdown.length > 0 && (
-
                                     <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-6 w-full">
-
                                         <h4 className="text-[12px] text-slate-500 font-bold mb-3 flex items-center gap-1.5">
-
                                             <Icons.MapPin size={14} /> สัดส่วนแยกตามจังหวัด (ภ.จว.) <span className="text-[10px] font-normal text-slate-400 ml-1 hidden sm:inline">(คลิกเพื่อกรองข้อมูลตารางด้านล่าง)</span>
-
                                         </h4>
-
                                         <div className="flex flex-wrap gap-2">
-
                                             {modalProvinceFilter && (
-
                                                 <button 
-
                                                     onClick={() => setModalProvinceFilter(null)}
-
                                                     className="flex items-center gap-1 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 rounded-lg px-3 py-1.5 shadow-sm transition-colors text-[11px] font-bold outline-none shrink-0"
-
                                                 >
-
                                                     <span className="text-sm leading-none">&times; </span> ล้างตัวกรอง
-
                                                 </button>
-
                                             )}
-
                                             {provinceBreakdown.map(prov => {
-
                                                 const isActive = modalProvinceFilter === prov.name;
-
                                                 return (
-
                                                     <button 
-
                                                         key={prov.name}
-
                                                         onClick={() => setModalProvinceFilter(isActive ? null : prov.name)}
-
                                                         className={`flex items-center border rounded-lg px-3 py-1.5 shadow-sm transition-all cursor-pointer outline-none focus:ring-2 focus:ring-indigo-200 ${isActive ? 'bg-indigo-600 border-indigo-600 hover:bg-indigo-700 text-white transform scale-105' : 'bg-slate-50 border-slate-200 hover:bg-indigo-50 hover:border-indigo-200'}`}
-
                                                     >
-
                                                         <span className={`text-[11px] font-bold mr-2 transition-colors ${isActive ? 'text-white' : 'text-slate-700'}`}> {prov.name} </span>
-
                                                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors ${isActive ? 'bg-indigo-500 text-white' : 'bg-indigo-100 text-indigo-700'}`}> {prov.count} </span>
-
                                                     </button>
-
                                                 );
-
                                             })}
-
                                         </div>
-
                                     </div>
-
                                 )}
-
-
 
                                 {barDetailInfo.type === 'task' ? (
-
                                     <>
-
                                         <h4 className="font-bold text-slate-800 mb-4 text-[14px] flex items-center gap-2">
-
                                             <Icons.ClipboardList size={18} className="text-indigo-500" /> รายการคดี / งาน ในสถานะนี้
-
                                         </h4>
-
                                         {barDetailInfo.cases.length > 0 ? (
-
                                             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden w-full overflow-x-auto">
-
                                                 <table className="w-full text-xs text-left min-w-[600px]">
-
                                                     <thead className="bg-slate-50 text-[10px] text-slate-500 uppercase border-b border-slate-200">
-
                                                         <tr>
-
                                                             <th className="px-5 py-4 font-bold text-center w-12 whitespace-nowrap"># </th>
-
                                                             <th className="px-5 py-4 font-bold min-w-[250px]"> ATM / BRANCH / ข้อมูลคดี </th>
-
                                                             <th className="px-5 py-4 font-bold text-center whitespace-nowrap w-[15%]"> สถานะ </th>
-
                                                             <th
-
                                                                 className="px-5 py-4 font-bold text-right cursor-pointer hover:bg-slate-200 transition-colors group select-none whitespace-nowrap w-[20%]"
-
                                                                 onClick={() => requestModalSort('transfer_amount')}
-
                                                                 title="คลิกเพื่อจัดเรียง"
-
                                                             >
-
                                                                 <div className="flex items-center justify-end gap-1.5">
-
                                                                     ยอดความเสียหาย(บาท)
-
                                                                     {modalSortConfig.key === 'transfer_amount' ? (
-
                                                                         modalSortConfig.direction === 'asc' ? <Icons.ArrowUp size={12} className="text-indigo-600" /> : <Icons.ArrowDown size={12} className="text-indigo-600" />
-
                                                                     ) : (
-
                                                                         <Icons.ChevronsUpDown size={12} className="text-slate-300 group-hover:text-slate-500" />
-
                                                                     )}
-
                                                                 </div>
-
                                                             </th>
-
                                                         </tr>
-
                                                     </thead>
-
                                                     <tbody className="divide-y divide-slate-100">
-
                                                         {sortedModalCases.map((row, idx) => {
-
                                                             const currentStatus = taskStatus[row.id]?.status || row.status_name || "รอรับเรื่อง";
-
                                                             const currentLink = taskStatus[row.id]?.report_link || row.report_link || "";
-
                                                             return (
-
                                                                 <tr key={idx} className="hover:bg-slate-50 transition-colors">
-
                                                                     <td className="px-5 py-4 text-center text-slate-400 font-medium align-top"> {idx + 1}</td>
-
                                                                     <td className="px-5 py-4 align-top">
-
                                                                         <div className="font-bold text-slate-800 text-[13px] mb-1.5 truncate max-w-[350px]" title={row.atm_location}> {row.atm_location} </div>
-
                                                                         <div className="flex flex-col gap-1.5">
-
                                                                             <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
-
                                                                                 <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200">
-
                                                                                     <Icons.Building size={10} className="text-slate-400" /> {row.atm_province.replace(/^จังหวัด/, '').replace(/^ภ\.จว\./, '')}
-
                                                                                 </div>
-
                                                                                 {(row.atm_lat && row.atm_lon) && (
-
                                                                                     <button 
-
                                                                                         onClick={() => {
-
                                                                                             setBarDetailOpen(false);
-
                                                                                             setTimeout(() => setMapFocus({ lat: row.atm_lat, lon: row.atm_lon, id: row.atm_location }), 300);
-
                                                                                         }}
-
                                                                                         className="text-blue-500 hover:text-blue-700 hover:underline flex items-center gap-1 transition-colors"
-
                                                                                     >
-
                                                                                         <Icons.MapFold size={12}/> ดูพิกัด
-
                                                                                     </button>
-
                                                                                 )}
-
                                                                             </div>
-
                                                                             <div className="flex flex-col gap-0.5 text-[11px] mt-1">
-
                                                                                 <div className="flex items-center gap-3">
-
                                                                                     <span className="font-bold text-indigo-600 font-mono tracking-tight"> {row.tracking_code} </span>
-
                                                                                     <span className="text-slate-500"> {row.case_type_detail} </span>
-
                                                                                 </div>
-
                                                                                 <div className="text-[10px] text-slate-400 mt-0.5">
-
                                                                                     วันที่: {row.complaint_date}
-
                                                                                     {row.transfer_time && <span className="font-medium text-slate-500 ml-1"> เวลา {row.transfer_time} น.</span>}
-
                                                                                 </div>
-
                                                                             </div>
-
                                                                             <div className="mt-1.5 pt-1.5 border-t border-slate-100 flex flex-col gap-1">
-
                                                                                 <div className="text-[10.5px] text-slate-500 flex items-center gap-1.5">
-
                                                                                     <Icons.Users size={12} className="text-indigo-400" />
-
                                                                                     <span className="font-bold text-slate-700"> {row.from_account_name} </span>
-
                                                                                 </div>
-
                                                                                 <div className="text-[10px] text-slate-500 font-mono flex items-center pl-4">
-
                                                                                     {row.from_account_no}
-
                                                                                     <span className="px-1.5 py-0.5 ml-2 rounded text-[8px] font-bold text-white shadow-sm" style={{ backgroundColor: BANK_COLORS[row.from_bank_shortname] || '#94a3b8' }}>
-
                                                                                         {row.from_bank_shortname}
-
                                                                                     </span>
-
                                                                                 </div>
-
                                                                             </div>
-
                                                                         </div>
-
                                                                     </td>
-
                                                                     <td className="px-5 py-4 text-center align-top">
-
                                                                         <div className="flex flex-col items-center gap-2">
-
                                                                             <span className={`inline-block text-[11px] font-bold py-1 px-3 rounded-full border shadow-sm ${getStatusColorClass(currentStatus)}`}>
-
                                                                                 {currentStatus}
-
                                                                             </span>
-
                                                                             {currentStatus === 'จัดทำรายงานสืบแล้ว' && currentLink && currentLink.startsWith('http') && (
-
                                                                                 <a 
-
                                                                                     href={currentLink}
-
                                                                                     target="_blank"
-
                                                                                     rel="noopener noreferrer"
-
                                                                                     className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-200 rounded hover:bg-indigo-100 transition-colors shadow-sm"
-
                                                                                 >
-
                                                                                     <Icons.ExternalLink size={12} /> ดูรายงาน
-
                                                                                 </a>
-
                                                                             )}
-
                                                                         </div>
-
                                                                     </td>
-
                                                                     <td className="px-5 py-4 text-right align-top">
-
                                                                         <span className="font-bold text-[#e11d48] text-[13px]"> {formatMoney(parseAmount(row.transfer_amount))}</span>
-
                                                                     </td>
-
                                                                 </tr>
-
                                                             );
-
                                                         })}
-
                                                     </tbody>
-
                                                 </table>
-
                                             </div>
-
                                         ) : (
-
                                             <div className="text-center py-10 text-slate-500 text-sm bg-white rounded-xl border border-slate-200"> ไม่พบข้อมูลในสถานะนี้ </div>
-
                                         )}
-
                                     </>
-
                                 ) : (
-
                                     <>
-
                                         <h4 className="font-bold text-slate-800 mb-4 text-[14px] flex items-center gap-2">
-
                                             <Icons.Users size={18} className="text-indigo-500" /> ข้อมูลบัญชีม้าที่เกี่ยวข้อง
-
                                         </h4>
-
                                         {barDetailInfo.mules.length > 0 ? (
-
                                             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden w-full overflow-x-auto">
-
                                                 <table className="w-full text-xs text-left min-w-[700px]">
-
                                                     <thead className="bg-slate-50 text-[10px] text-slate-500 uppercase border-b border-slate-200">
-
                                                         <tr>
-
                                                             <th className="px-4 py-4 font-bold text-center w-10 whitespace-nowrap"># </th>
-
                                                             <th className="px-4 py-4 font-bold whitespace-nowrap"> ชื่อบัญชีม้า </th>
-
                                                             <th className="px-4 py-4 font-bold whitespace-nowrap"> เลขที่บัญชี </th>
-
                                                             <th className="px-4 py-4 font-bold text-center whitespace-nowrap"> ธนาคาร </th>
-
                                                             <th className="px-4 py-4 font-bold text-center whitespace-nowrap"> จังหวัดที่ถอน </th>
-
                                                             <th className="px-5 py-4 font-bold text-right"> ยอดรวม(บาท) </th>
-
                                                         </tr>
-
                                                     </thead>
-
                                                     <tbody className="divide-y divide-slate-100">
-
                                                         {sortedModalMules.map((mule, idx) => (
-
                                                             <tr key={idx} className="hover:bg-slate-50 transition-colors">
-
                                                                 <td className="px-4 py-3.5 text-center text-slate-400 font-medium"> {idx + 1} </td>
-
                                                                 <td className="px-4 py-3.5 font-bold text-slate-700 flex items-center gap-2">
-
                                                                     <Icons.Flame size={14} className={mule.amount > 1000000 ? "text-[#f97316]" : "text-slate-300"} /> {mule.name}
-
                                                                 </td>
-
                                                                 <td className="px-4 py-3.5 font-mono text-slate-600 text-[13px]"> {mule.accNo} </td>
-
                                                                 <td className="px-4 py-3.5 text-center">
-
                                                                     <span className="px-2.5 py-1 rounded-md text-[10px] font-bold text-white shadow-sm" style={{ backgroundColor: BANK_COLORS[mule.bank] || '#94a3b8' }}> {mule.bank} </span>
-
                                                                 </td>
-
                                                                 <td className="px-4 py-3.5 text-center text-slate-600 text-[11px]"> {mule.provinceStr} </td>
-
                                                                 <td className="px-5 py-3.5 text-right font-bold text-[#e11d48] text-[13px]"> {formatMoney(mule.amount)} </td>
-
                                                             </tr>
-
                                                         ))}
-
                                                     </tbody>
-
                                                 </table>
-
                                             </div>
-
                                         ) : (
-
                                             <div className="text-center py-10 text-slate-500 text-sm bg-white rounded-xl border border-slate-200"> ไม่พบข้อมูลบัญชีม้าในหมวดหมู่นี้ </div>
-
                                         )}
-
                                     </>
-
                                 )}
-
                             </div>
-
                         </div>
-
                     </div>
-
                 )}
-
-
 
                 {/* Modal ล็อกอินเข้า Dashboard */}
-
                 {authModalOpen && (
-
                     <div className="fixed inset-0 bg-slate-900/40 z-[400] flex items-center justify-center p-4 backdrop-blur-md transition-all animate-in fade-in duration-300">
-
                         <div className="glass-panel rounded-3xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-500 border border-white/40">
-
                             <div className="p-8 text-center relative">
-
                                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
-
                                 <div className="w-20 h-20 bg-indigo-500/10 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-indigo-100/20 shadow-xl border border-indigo-100/50 rotate-3 hover:rotate-0 transition-transform duration-300">
-
                                     <Icons.Lock size={40} />
-
                                 </div>
-
                                 <h3 className="text-2xl font-black text-slate-800 tracking-tight"> RESTRICTED AREA </h3>
-
                                 <p className="text-sm text-slate-500 mt-2 font-medium"> กรุณากรอกรหัส PIN เพื่อเข้าถึง Dashboard </p>
-
                             </div>
-
                             <form onSubmit={handlePinSubmit} className="p-8 pt-0">
-
                                 <div className="mb-6 relative group">
-
                                     <input 
-
                                         type="password"
-
                                         autoFocus
-
                                         placeholder="••••"
-
                                         className={`w-full text-center tracking-[1em] font-black text-3xl py-4 rounded-2xl border transition-all shadow-inner bg-white/50 backdrop-blur-sm outline-none ${pinError ? 'border-red-300 bg-red-50 focus:ring-red-200 text-red-600 animate-shake' : 'border-slate-200 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white text-slate-700'}`}
-
                                         value={pinInput}
-
                                         onChange={(e) => { 
-
                                             const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
-
                                             setPinInput(val); 
-
                                             setPinError(false); 
-
                                         }}
-
                                     />
-
                                     {pinError && <p className="text-[10px] text-red-500 font-bold mt-2 text-center uppercase tracking-widest animate-bounce"> Invalid PIN! Try again </p>}
-
                                 </div>
-
                                 <div className="flex flex-col gap-3">
-
                                     <button type="submit" className="w-full py-4 rounded-2xl font-black text-white bg-indigo-600 hover:bg-indigo-700 active:scale-95 transition-all shadow-xl shadow-indigo-200 flex items-center justify-center gap-2">
-
                                         UNLOCK DASHBOARD <Icons.Unlock size={18} />
-
                                     </button>
-
                                     <button type="button" onClick={() => setAuthModalOpen(false)} className="w-full py-3 rounded-xl font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-100/50 transition-all text-sm uppercase tracking-widest"> 
-
                                         Cancel 
-
                                     </button>
-
                                 </div>
-
                             </form>
-
                         </div>
-
                     </div>
-
                 )}
 
-
-
-                {/* �Ÿ�� ใหม่ล่าสุด! Custom Modal สำหรับแจ้งเตือน Error สวยๆ */}
-
+                {/* 🚨 ใหม่ล่าสุด! Custom Modal สำหรับแจ้งเตือน Error สวยๆ */}
                 {customAlert.isOpen && (
-
                     <div className="fixed inset-0 bg-slate-900/60 z-[500] flex items-center justify-center p-4 backdrop-blur-sm transition-all animate-in fade-in">
-
                         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-
                             <div className="p-6 text-center border-b border-slate-100 relative">
-
                                 <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
-
                                     <Icons.AlertTriangle size={32} />
-
                                 </div>
-
                                 <h3 className="text-xl font-bold text-slate-800">{customAlert.title}</h3>
-
                                 <p className="text-sm text-slate-600 mt-3 leading-relaxed">{customAlert.message}</p>
-
                             </div>
-
                             <div className="p-5 bg-slate-50 flex justify-center">
-
                                 <button 
-
                                     onClick={() => setCustomAlert({ ...customAlert, isOpen: false })} 
-
                                     className="w-full py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-md"
-
                                 >
-
                                     ตกลง / เข้าใจแล้ว
-
                                 </button>
-
                             </div>
-
                         </div>
-
                     </div>
-
                 )}
-
-
 
             </div>
-
         );
-
     };
 
-
-
     const root = ReactDOM.createRoot(document.getElementById('root'));
-
     root.render(<Dashboard />);
-
 };
 
-
-
 if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', runDashboard); } else { runDashboard(); }
-
 </script>
-
