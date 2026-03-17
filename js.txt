@@ -1570,7 +1570,71 @@ const runDashboard = () => {
                                                     {filteredData.map((row) => {
                                                         const tInfo = taskStatus[row.id] || { status: "รอรับเรื่อง", note: "-", report_link: "", last_updated: "" };
                                                         const isSavingStatus = savingId === row.id && savingType === 'status';
-                                                                                <td className="px-6 py-6 align-top text-center relative">
+                                                        const isSavingNote = savingId === row.id && savingType === 'note';
+                                                        const isSavingLink = savingId === row.id && savingType === 'link';
+                                                        
+                                                        return (
+                                                            <tr key={row.id} className="hover:bg-slate-50 transition-all duration-300 group border-b border-slate-100">
+                                                                {/* Column 1: Responsible Unit */}
+                                                                <td className="px-6 py-6 align-top">
+                                                                    <div className="space-y-3">
+                                                                        <div className="flex items-center gap-2.5 bg-indigo-50/50 p-2.5 rounded-xl border border-indigo-100 shadow-sm group-hover:bg-indigo-100 transition-all">
+                                                                            <div className="p-1.5 bg-indigo-100 rounded-lg text-indigo-600"> <Icons.Building size={14} /> </div>
+                                                                            <div className="overflow-hidden">
+                                                                                <div className="text-[11px] font-black text-indigo-800 leading-none truncate"> {row.resp_prov} </div>
+                                                                                <div className="text-[9px] text-indigo-500 font-bold uppercase tracking-wider mt-1 opacity-70"> PROVINCE UNIT </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        {row.resp_station && row.resp_station !== '-' && (
+                                                                            <div className="flex items-center gap-2.5 bg-amber-50/50 p-2.5 rounded-xl border border-amber-100 shadow-sm group-hover:bg-amber-100 transition-all">
+                                                                                <div className="p-1.5 bg-amber-100 rounded-lg text-amber-600"> <Icons.Shield size={14} /> </div>
+                                                                                <div className="overflow-hidden">
+                                                                                    <div className="text-[11px] font-black text-amber-800 leading-none truncate"> {row.resp_station} </div>
+                                                                                    <div className="text-[9px] text-amber-600 font-bold uppercase tracking-wider mt-1 opacity-70"> RESPONSIBLE STATION </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </td>
+
+                                                                {/* Column 2: ATM / BRANCH / Info */}
+                                                                <td className="px-6 py-6 align-top">
+                                                                    <div className="flex flex-col gap-3">
+                                                                        <div className="flex justify-between items-start">
+                                                                            <div className="space-y-1">
+                                                                                <div className="flex items-center gap-2 text-[14px] font-black text-slate-800 tracking-tight leading-tight">
+                                                                                    {row._source_type === 'ATM' ? <Icons.Building size={16} className="text-blue-500" /> : <Icons.Building size={16} className="text-emerald-500" />}
+                                                                                    <span className="truncate max-w-[180px]" title={row.atm_location}> {row.atm_location} </span>
+                                                                                </div>
+                                                                                <div className="text-[11px] text-slate-400 font-bold flex items-center gap-1.5">
+                                                                                    <Icons.Hash size={10} /> ID: {row.atm_machinecode}
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="flex flex-col items-end gap-1">
+                                                                                <span className="font-black text-indigo-600 font-mono tracking-tighter text-[13px] inline-block px-2 py-0.5 bg-indigo-50 rounded-md"> {row.tracking_code} </span>
+                                                                                <span className="font-black text-red-600 text-[13px] tabular-nums"> {formatMoney(parseAmount(row.transfer_amount))} <span className="text-[10px] font-bold text-slate-400">฿</span> </span>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                                                            <Icons.Clock size={10} /> {row.complaint_date} <span className="text-slate-300">|</span> {row.transfer_time}
+                                                                        </div>
+                                                                        <div className="space-y-1.5 border-t border-slate-100 pt-2.5">
+                                                                            <div className="text-[11px] text-slate-700 flex items-center gap-2 font-bold">
+                                                                                <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-400"> <Icons.Users size={10} /> </div>
+                                                                                <span className="truncate"> {row.from_account_name} </span>
+                                                                            </div>
+                                                                            <div className="text-[10px] text-slate-500 font-mono flex items-center pl-7 gap-2">
+                                                                                {row.from_account_no}
+                                                                                <span className="px-2 py-0.5 rounded-md text-[9px] font-black text-white shadow-sm ring-1 ring-black/5" style={{ backgroundColor: BANK_COLORS[row.from_bank_shortname] || '#94a3b8' }}>
+                                                                                    {row.from_bank_shortname}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+
+                                                                {/* Column 3: Status Select */}
+                                                                <td className="px-6 py-6 align-top text-center relative">
                                                                     <div className="inline-block relative">
                                                                         <CustomStatusSelect 
                                                                             value={tInfo.status}
@@ -1592,7 +1656,7 @@ const runDashboard = () => {
                                                                                     });
                                                                                     return;
                                                                                 }
-                                                                                const now = new Date().toLocaleString('th-TH');
+                                                                                const now = formatDateTime();
                                                                                 setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], status: newStatus, last_updated: now } }));
                                                                                 updateTaskInDB(row, newStatus, tInfo.note, tInfo.report_link, 'status');
                                                                             }}
@@ -1600,73 +1664,7 @@ const runDashboard = () => {
                                                                     </div>
                                                                 </td>
 
-                                                                                <span className="font-black text-indigo-600 font-mono tracking-tighter text-[13px] inline-block px-2 py-0.5 bg-indigo-50 rounded-md"> {row.tracking_code} </span>
-                                                                                <span className="font-black text-red-600 text-[13px] tabular-nums"> {formatMoney(parseAmount(row.transfer_amount))} <span className="text-[10px] font-bold text-slate-400">฿</span></span>
-                                                                            </div>
-                                                                            <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">
-                                                                                <Icons.Clock size={10} /> {row.complaint_date} <span className="text-slate-300">|</span> {row.transfer_time}
-                                                                            </div>
-                                                                            <div className="space-y-1.5 border-t border-slate-100 pt-2.5">
-                                                                                <div className="text-[11px] text-slate-700 flex items-center gap-2 font-bold">
-                                                                                    <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 scroll-none">
-                                                                                        <Icons.Users size={10} />
-                                                                                    </div>
-                                                                                    <span className="truncate"> {row.from_account_name} </span>
-                                                                                </div>
-                                                                                <div className="text-[10px] text-slate-500 font-mono flex items-center pl-7 gap-2">
-                                                                                    {row.from_account_no}
-                                                                                    <span className="px-2 py-0.5 rounded-md text-[9px] font-black text-white shadow-sm ring-1 ring-black/5" style={{ backgroundColor: BANK_COLORS[row.from_bank_shortname] || '#94a3b8' }}>
-                                                                                        {row.from_bank_shortname}
-                                                                                    </span>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                        {row.resp_station && row.resp_station !== '-' && (
-                                                                            <div className="flex items-center gap-2.5 bg-amber-50/50 p-2.5 rounded-xl border border-amber-100 shadow-sm transition-all group-hover:bg-amber-100 group-hover:shadow-md group-hover:shadow-amber-200/20">
-                                                                                <div className="p-1.5 bg-amber-100 rounded-lg text-amber-600">
-                                                                                    <Icons.Shield size={14} />
-                                                                                </div>
-                                                                                <div className="overflow-hidden">
-                                                                                    <div className="text-[11px] font-black text-amber-800 leading-none truncate"> {row.resp_station} </div>
-                                                                                    <div className="text-[9px] text-amber-600 font-bold uppercase tracking-wider mt-1 opacity-70"> RESPONSIBLE UNIT </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                </td>
-                                                                <td className="px-4 py-3.5 align-top text-center relative pt-5">
-                                                                    <div className="mt-0.5">
-                                                                        <CustomStatusSelect 
-                                                                            value={tInfo.status}
-                                                                            isSaving={isSavingStatus}
-                                                                            onChange={(newStatus) => {
-                                                                                // 🚨 1. เงื่อนไข: เปลี่ยนเป็น "จัดทำรายงานสืบแล้ว" ต้องมีลิงก์ HTTP
-                                                                                if (newStatus === 'จัดทำรายงานสืบแล้ว' && (!tInfo.report_link || !tInfo.report_link.startsWith('http'))) {
-                                                                                    setCustomAlert({
-                                                                                        isOpen: true,
-                                                                                        title: "ไม่สามารถเปลี่ยนสถานะได้!",
-                                                                                        message: "กรุณาระบุ 'ลิงก์รายงานสืบ' (ต้องขึ้นต้นด้วย http:// หรือ https://) ในช่องด้านขวามือให้ถูกต้องก่อนครับ"
-                                                                                    });
-                                                                                    return; // หยุดการทำงาน
-                                                                                }
-
-                                                                                // 🚨 2. เงื่อนไข: เปลี่ยนเป็น "ไม่พบ..." ต้องมีหมายเหตุ
-                                                                                if (newStatus === 'ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก...' && (!tInfo.note || tInfo.note.trim() === '' || tInfo.note === '-')) {
-                                                                                    setCustomAlert({
-                                                                                        isOpen: true,
-                                                                                        title: "ไม่สามารถเปลี่ยนสถานะได้!",
-                                                                                        message: "กรุณาระบุ 'หมายเหตุ' เพื่ออธิบายสาเหตุที่ไม่พบ หรือ ไม่สามารถดำเนินการได้ ก่อนครับ"
-                                                                                    });
-                                                                                    return; // หยุดการทำงาน
-                                                                                }
-                                                                                
-                                                                                const now = new Date().toLocaleString('th-TH');
-                                                                                setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], status: newStatus, last_updated: now } }));
-                                                                                updateTaskInDB(row, newStatus, tInfo.note, tInfo.report_link, 'status');
-                                                                            }}
-                                                                        />
-                                                                    </div>
-                                                                </td>
+                                                                {/* Column 4: Notes */}
                                                                 <td className="px-6 py-6 align-top">
                                                                     <div className="flex flex-col gap-2 w-full group/input">
                                                                         <div className="relative">
@@ -1677,7 +1675,7 @@ const runDashboard = () => {
                                                                                 value={tInfo.note === "-" ? "" : tInfo.note}
                                                                                 onChange={(e) => setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], note: e.target.value } }))}
                                                                                 onBlur={(e) => {
-                                                                                    const now = new Date().toLocaleString('th-TH');
+                                                                                    const now = formatDateTime();
                                                                                     setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], last_updated: now } }));
                                                                                     updateTaskInDB(row, tInfo.status, e.target.value, tInfo.report_link, 'note');
                                                                                 }}
@@ -1688,12 +1686,12 @@ const runDashboard = () => {
                                                                         </div>
                                                                     </div>
                                                                 </td>
+
+                                                                {/* Column 5: Report Link */}
                                                                 <td className="px-6 py-6 align-top">
                                                                     <div className="flex flex-col gap-3 w-full items-end">
                                                                         <div className="relative w-full max-w-[240px]">
-                                                                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
-                                                                                <Icons.Link size={14} />
-                                                                            </div>
+                                                                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"> <Icons.Link size={14} /> </div>
                                                                             <input
                                                                                 type="url"
                                                                                 className="bg-slate-50 border border-slate-200 text-[11px] font-bold rounded-xl pl-10 pr-4 py-2.5 w-full outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 focus:bg-white shadow-inner placeholder-slate-400 transition-all"
@@ -1710,7 +1708,7 @@ const runDashboard = () => {
                                                                                         });
                                                                                         val = '';
                                                                                     }
-                                                                                    const now = val === '' ? "" : new Date().toLocaleString('th-TH');
+                                                                                    const now = val === '' ? "" : formatDateTime();
                                                                                     setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], report_link: val, last_updated: now } }));
                                                                                     updateTaskInDB(row, tInfo.status, tInfo.note, val, 'link');
                                                                                 }}
