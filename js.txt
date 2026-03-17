@@ -8,7 +8,7 @@ const runDashboard = () => {
     const { useState, useMemo, useEffect, useRef } = React;
     const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } = window.Recharts;
 
-    const REGION_8_PROVINCES = ["ภูเก็ต", "สุราษฎร์ธานี", "นครศรีธรรมราช", "กระบี่", "พังงา", "ระนอง", "ชุมพร"];
+    const REGION_8_PROVINCES = ["à¸ à¸¹à¹€à¸à¹‡à¸•", "à¸ªà¸¸à¸£à¸²à¸©à¸Žà¸£à¹Œà¸˜à¸²à¸™à¸µ", "à¸™à¸„à¸£à¸¨à¸£à¸µà¸˜à¸£à¸£à¸¡à¸£à¸²à¸Š", "à¸à¸£à¸°à¸šà¸µà¹ˆ", "à¸žà¸±à¸‡à¸‡à¸²", "à¸£à¸°à¸™à¸­à¸‡", "à¸Šà¸¸à¸¡à¸žà¸£"];
     const Icons = window.Icons;
     const BANK_COLORS = { "KBANK": "#10b981", "SCB": "#4f46e5", "KTB": "#0ea5e9", "BBL": "#3b82f6", "GSB": "#ec4899", "UOBT": "#8b5cf6", "TTB": "#3b82f6", "BAAC": "#10b981" };
 
@@ -28,6 +28,17 @@ const runDashboard = () => {
 
     const formatMoney = (amount) => { 
         return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); 
+    };
+
+    const formatDateTime = () => {
+        const now = new Date();
+        const d = now.getDate().toString().padStart(2, '0');
+        const m = (now.getMonth() + 1).toString().padStart(2, '0');
+        const y = now.getFullYear() + 543; // Buddhist Year
+        const h = now.getHours().toString().padStart(2, '0');
+        const min = now.getMinutes().toString().padStart(2, '0');
+        const s = now.getSeconds().toString().padStart(2, '0');
+        return `${d}/${m}/${y} ${h}:${min}:${s}`;
     };
 
     const parseDateLocal = (dateStr) => {
@@ -88,21 +99,21 @@ const runDashboard = () => {
         );
     };
 
-    // 🚨 อัปเดต STATUS_INFO ใหม่
+    // ðŸš¨ à¸­à¸±à¸›à¹€à¸”à¸• STATUS_INFO à¹ƒà¸«à¸¡à¹ˆ
     const STATUS_INFO = {
-        "รอรับเรื่อง": { color: "#f59e0b", short: "รอรับเรื่อง", bg: "bg-amber-50", border: "border-amber-200" },
-        "อยู่ระหว่างสืบสวน": { color: "#8b5cf6", short: "สืบสวน", bg: "bg-purple-50", border: "border-purple-200" },
-        "จัดทำรายงานสืบแล้ว": { color: "#0ea5e9", short: "รายงานแล้ว", bg: "bg-sky-50", border: "border-sky-200" },
-        "ส่งคืนต้นสังกัดแล้ว": { color: "#10b981", short: "ส่งคืนแล้ว", bg: "bg-emerald-50", border: "border-emerald-200" },
-        "ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก...": { color: "#ef4444", short: "ไม่พบ/ยกเลิก", bg: "bg-red-50", border: "border-red-200" }
+        "à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡": { color: "#f59e0b", short: "à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡", bg: "bg-amber-50", border: "border-amber-200" },
+        "à¸­à¸¢à¸¹à¹ˆà¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡à¸ªà¸·à¸šà¸ªà¸§à¸™": { color: "#8b5cf6", short: "à¸ªà¸·à¸šà¸ªà¸§à¸™", bg: "bg-purple-50", border: "border-purple-200" },
+        "à¸ˆà¸±à¸”à¸—à¸³à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸·à¸šà¹à¸¥à¹‰à¸§": { color: "#0ea5e9", short: "à¸£à¸²à¸¢à¸‡à¸²à¸™à¹à¸¥à¹‰à¸§", bg: "bg-sky-50", border: "border-sky-200" },
+        "à¸ªà¹ˆà¸‡à¸„à¸·à¸™à¸•à¹‰à¸™à¸ªà¸±à¸‡à¸à¸±à¸”à¹à¸¥à¹‰à¸§": { color: "#10b981", short: "à¸ªà¹ˆà¸‡à¸„à¸·à¸™à¹à¸¥à¹‰à¸§", bg: "bg-emerald-50", border: "border-emerald-200" },
+        "à¹„à¸¡à¹ˆà¸žà¸š/à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸”à¸³à¹€à¸™à¸´à¸™à¸à¸²à¸£à¹„à¸”à¹‰à¹€à¸™à¸·à¹ˆà¸­à¸‡à¸ˆà¸²à¸...": { color: "#ef4444", short: "à¹„à¸¡à¹ˆà¸žà¸š/à¸¢à¸à¹€à¸¥à¸´à¸", bg: "bg-red-50", border: "border-red-200" }
     };
 
     const getStatusColorClass = (status) => {
-        if (status === 'รอรับเรื่อง') return 'bg-amber-50 border-amber-200 text-amber-600 focus:ring-amber-500 hover:border-amber-300';
-        if (status === 'อยู่ระหว่างสืบสวน') return 'bg-purple-50 border-purple-200 text-purple-600 focus:ring-purple-500 hover:border-purple-300';
-        if (status === 'จัดทำรายงานสืบแล้ว') return 'bg-sky-50 border-sky-200 text-sky-600 focus:ring-sky-500 hover:border-sky-300';
-        if (status === 'ส่งคืนต้นสังกัดแล้ว') return 'bg-emerald-50 border-emerald-200 text-emerald-600 focus:ring-emerald-500 hover:border-emerald-300';
-        if (status === 'ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก...') return 'bg-red-50 border-red-200 text-red-600 focus:ring-red-500 hover:border-red-300';
+        if (status === 'à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡') return 'bg-amber-50 border-amber-200 text-amber-600 focus:ring-amber-500 hover:border-amber-300';
+        if (status === 'à¸­à¸¢à¸¹à¹ˆà¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡à¸ªà¸·à¸šà¸ªà¸§à¸™') return 'bg-purple-50 border-purple-200 text-purple-600 focus:ring-purple-500 hover:border-purple-300';
+        if (status === 'à¸ˆà¸±à¸”à¸—à¸³à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸·à¸šà¹à¸¥à¹‰à¸§') return 'bg-sky-50 border-sky-200 text-sky-600 focus:ring-sky-500 hover:border-sky-300';
+        if (status === 'à¸ªà¹ˆà¸‡à¸„à¸·à¸™à¸•à¹‰à¸™à¸ªà¸±à¸‡à¸à¸±à¸”à¹à¸¥à¹‰à¸§') return 'bg-emerald-50 border-emerald-200 text-emerald-600 focus:ring-emerald-500 hover:border-emerald-300';
+        if (status === 'à¹„à¸¡à¹ˆà¸žà¸š/à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸”à¸³à¹€à¸™à¸´à¸™à¸à¸²à¸£à¹„à¸”à¹‰à¹€à¸™à¸·à¹ˆà¸­à¸‡à¸ˆà¸²à¸...') return 'bg-red-50 border-red-200 text-red-600 focus:ring-red-500 hover:border-red-300';
         return 'bg-white border-slate-300 text-slate-700 focus:ring-indigo-500 hover:border-slate-400';
     };
 
@@ -112,17 +123,17 @@ const runDashboard = () => {
             return (
                 <div className="bg-white p-3.5 border border-slate-200 shadow-xl rounded-xl z-50 min-w-[190px] animate-fade-slide-up">
                     <p className="font-bold text-slate-800 mb-2.5 border-b border-slate-100 pb-2 flex justify-between items-center">
-                        {label || "ไม่ระบุ"}
-                        <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium ml-2"> คลิกดู </span>
+                        {label || "à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸"}
+                        <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium ml-2"> à¸„à¸¥à¸´à¸à¸”à¸¹ </span>
                     </p>
                     <div className="flex flex-col gap-2 text-xs">
                         <div className="flex justify-between items-center gap-4">
-                            <span className="flex items-center gap-1.5 text-slate-500 font-medium"> <div className="w-2 h-2 rounded-full" style={{ backgroundColor: data.fill || '#6366f1' }}> </div> รายการ:</span>
+                            <span className="flex items-center gap-1.5 text-slate-500 font-medium"> <div className="w-2 h-2 rounded-full" style={{ backgroundColor: data.fill || '#6366f1' }}> </div> à¸£à¸²à¸¢à¸à¸²à¸£:</span>
                             <span className="font-bold text-slate-800"> {data.count} </span>
                         </div>
                         <div className="flex justify-between items-center gap-4">
-                            <span className="flex items-center gap-1.5 text-slate-500 font-medium"> <div className="w-2 h-2 rounded-full bg-red-500"> </div> ยอดรวม:</span>
-                            <span className="font-bold text-red-600"> {formatMoney(data.amount)} ฿</span>
+                            <span className="flex items-center gap-1.5 text-slate-500 font-medium"> <div className="w-2 h-2 rounded-full bg-red-500"> </div> à¸¢à¸­à¸”à¸£à¸§à¸¡:</span>
+                            <span className="font-bold text-red-600"> {formatMoney(data.amount)} à¸¿</span>
                         </div>
                     </div>
                 </div>
@@ -136,27 +147,27 @@ const runDashboard = () => {
             const data = payload[0].payload;
             return (
                 <div className="bg-white p-3.5 border border-slate-200 shadow-xl rounded-xl z-50 min-w-[190px] animate-fade-slide-up">
-                    <p className="font-bold text-slate-800 mb-2.5 border-b border-slate-100 pb-2"> จ.{label || "ไม่ระบุ"} </p>
+                    <p className="font-bold text-slate-800 mb-2.5 border-b border-slate-100 pb-2"> à¸ˆ.{label || "à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸"} </p>
                     <div className="flex flex-col gap-2 text-xs">
                         <div className="flex justify-between items-center gap-4">
-                            <span className="flex items-center gap-1.5 text-slate-500 font-medium"> <div className="w-2 h-2 rounded-full bg-[#f59e0b]"> </div> รอรับเรื่อง:</span>
-                            <span className="font-bold text-slate-800"> {data["รอรับเรื่อง"] || 0} </span>
+                            <span className="flex items-center gap-1.5 text-slate-500 font-medium"> <div className="w-2 h-2 rounded-full bg-[#f59e0b]"> </div> à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡:</span>
+                            <span className="font-bold text-slate-800"> {data["à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡"] || 0} </span>
                         </div>
                         <div className="flex justify-between items-center gap-4">
-                            <span className="flex items-center gap-1.5 text-slate-500 font-medium"> <div className="w-2 h-2 rounded-full bg-[#8b5cf6]"> </div> สืบสวน:</span>
-                            <span className="font-bold text-slate-800"> {data["อยู่ระหว่างสืบสวน"] || 0} </span>
+                            <span className="flex items-center gap-1.5 text-slate-500 font-medium"> <div className="w-2 h-2 rounded-full bg-[#8b5cf6]"> </div> à¸ªà¸·à¸šà¸ªà¸§à¸™:</span>
+                            <span className="font-bold text-slate-800"> {data["à¸­à¸¢à¸¹à¹ˆà¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡à¸ªà¸·à¸šà¸ªà¸§à¸™"] || 0} </span>
                         </div>
                         <div className="flex justify-between items-center gap-4">
-                            <span className="flex items-center gap-1.5 text-slate-500 font-medium"> <div className="w-2 h-2 rounded-full bg-[#0ea5e9]"> </div> รายงานแล้ว:</span>
-                            <span className="font-bold text-slate-800"> {data["จัดทำรายงานสืบแล้ว"] || 0} </span>
+                            <span className="flex items-center gap-1.5 text-slate-500 font-medium"> <div className="w-2 h-2 rounded-full bg-[#0ea5e9]"> </div> à¸£à¸²à¸¢à¸‡à¸²à¸™à¹à¸¥à¹‰à¸§:</span>
+                            <span className="font-bold text-slate-800"> {data["à¸ˆà¸±à¸”à¸—à¸³à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸·à¸šà¹à¸¥à¹‰à¸§"] || 0} </span>
                         </div>
                         <div className="flex justify-between items-center gap-4">
-                            <span className="flex items-center gap-1.5 text-slate-500 font-medium"> <div className="w-2 h-2 rounded-full bg-[#10b981]"> </div> ส่งคืน:</span>
-                            <span className="font-bold text-slate-800"> {data["ส่งคืนต้นสังกัดแล้ว"] || 0} </span>
+                            <span className="flex items-center gap-1.5 text-slate-500 font-medium"> <div className="w-2 h-2 rounded-full bg-[#10b981]"> </div> à¸ªà¹ˆà¸‡à¸„à¸·à¸™:</span>
+                            <span className="font-bold text-slate-800"> {data["à¸ªà¹ˆà¸‡à¸„à¸·à¸™à¸•à¹‰à¸™à¸ªà¸±à¸‡à¸à¸±à¸”à¹à¸¥à¹‰à¸§"] || 0} </span>
                         </div>
                         <div className="flex justify-between items-center gap-4">
-                            <span className="flex items-center gap-1.5 text-slate-500 font-medium"> <div className="w-2 h-2 rounded-full bg-[#ef4444]"> </div> ไม่พบ/ยกเลิก:</span>
-                            <span className="font-bold text-slate-800"> {data["ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก..."] || 0} </span>
+                            <span className="flex items-center gap-1.5 text-slate-500 font-medium"> <div className="w-2 h-2 rounded-full bg-[#ef4444]"> </div> à¹„à¸¡à¹ˆà¸žà¸š/à¸¢à¸à¹€à¸¥à¸´à¸:</span>
+                            <span className="font-bold text-slate-800"> {data["à¹„à¸¡à¹ˆà¸žà¸š/à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸”à¸³à¹€à¸™à¸´à¸™à¸à¸²à¸£à¹„à¸”à¹‰à¹€à¸™à¸·à¹ˆà¸­à¸‡à¸ˆà¸²à¸..."] || 0} </span>
                         </div>
                     </div>
                 </div>
@@ -167,7 +178,7 @@ const runDashboard = () => {
 
     const CustomStatusSelect = ({ value, onChange, isSaving }) => {
         const [isOpen, setIsOpen] = useState(false);
-        const currentObj = STATUS_INFO[value] || STATUS_INFO["รอรับเรื่อง"];
+        const currentObj = STATUS_INFO[value] || STATUS_INFO["à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡"];
         const selectRef = useRef(null);
 
         useEffect(() => {
@@ -198,7 +209,7 @@ const runDashboard = () => {
                 {isOpen && (
                     <div className="absolute right-0 md:left-1/2 md:-translate-x-1/2 mt-2 w-auto min-w-[200px] bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200/60 z-[100] py-2 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200">
                         <div className="px-4 py-2 mb-1 border-b border-slate-50">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest"> เลือกสถานะงาน </span>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest"> à¹€à¸¥à¸·à¸­à¸à¸ªà¸–à¸²à¸™à¸°à¸‡à¸²à¸™ </span>
                         </div>
                         {Object.keys(STATUS_INFO).map(k => (
                             <div key={k}
@@ -254,15 +265,15 @@ const runDashboard = () => {
                     if (!aggregatedPoints[key]) {
                         let extraInfo = '';
                         if (point.source_type === 'ATM' || point._source_type === 'ATM') {
-                            extraInfo = point.atm_name || point['ชื่อเครื่อง ATM'] || '';
+                            extraInfo = point.atm_name || point['à¸Šà¸·à¹ˆà¸­à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡ ATM'] || '';
                         } else {
-                            extraInfo = point.branch_address || point['ที่อยู่สาขา'] || '';
+                            extraInfo = point.branch_address || point['à¸—à¸µà¹ˆà¸­à¸¢à¸¹à¹ˆà¸ªà¸²à¸‚à¸²'] || '';
                         }
 
                         aggregatedPoints[key] = {
                             lat, lon, count: 0, amount: 0,
-                            location: point.atm_location || 'ไม่ระบุสถานที่',
-                            province: point.atm_province || 'ไม่ระบุ',
+                            location: point.atm_location || 'à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸à¸ªà¸–à¸²à¸™à¸—à¸µà¹ˆ',
+                            province: point.atm_province || 'à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸',
                             extraInfo: extraInfo,
                             sourceType: point.source_type || point._source_type,
                             bankCodes: new Set()
@@ -270,7 +281,7 @@ const runDashboard = () => {
                     }
                     aggregatedPoints[key].count += 1;
                     aggregatedPoints[key].amount += parseAmount(point.transfer_amount);
-                    if (point.atm_bank_code && point.atm_bank_code !== 'ไม่ระบุ') {
+                    if (point.atm_bank_code && point.atm_bank_code !== 'à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸') {
                         aggregatedPoints[key].bankCodes.add(point.atm_bank_code);
                     }
                 }
@@ -288,7 +299,7 @@ const runDashboard = () => {
                     radius: radius / 2, fillColor: color, color: '#fff', weight: 1, opacity: 1, fillOpacity: 1
                 });
 
-                const extraInfoLabel = group.sourceType === 'ATM' ? 'ชื่อเครื่อง ATM' : 'ที่อยู่สาขา';
+                const extraInfoLabel = group.sourceType === 'ATM' ? 'à¸Šà¸·à¹ˆà¸­à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡ ATM' : 'à¸—à¸µà¹ˆà¸­à¸¢à¸¹à¹ˆà¸ªà¸²à¸‚à¸²';
                 const extraInfoHtml = group.extraInfo ? `
                     <tr style="border-bottom: 1px dashed #e2e8f0;">
                         <td style="padding: 6px 0; color: #64748b; vertical-align: top; width: 40%;">${extraInfoLabel}</td>
@@ -305,7 +316,7 @@ const runDashboard = () => {
 
                     bankHtml = `
                         <tr style="border-bottom: 1px dashed #e2e8f0;">
-                            <td style="padding: 6px 0; color: #64748b; vertical-align: middle;">ธนาคาร</td>
+                            <td style="padding: 6px 0; color: #64748b; vertical-align: middle;">à¸˜à¸™à¸²à¸„à¸²à¸£</td>
                             <td style="padding: 6px 0; text-align: right;">${badges}</td>
                         </tr>
                     `;
@@ -324,15 +335,15 @@ const runDashboard = () => {
                                 ${bankHtml}
                                 ${extraInfoHtml}
                                 <tr style="border-bottom: 1px dashed #e2e8f0;">
-                                    <td style="padding: 6px 0; color: #64748b;">จังหวัด</td>
+                                    <td style="padding: 6px 0; color: #64748b;">à¸ˆà¸±à¸‡à¸«à¸§à¸±à¸”</td>
                                     <td style="padding: 6px 0; text-align: right; font-weight: bold;">${group.province}</td>
                                 </tr>
                                 <tr style="border-bottom: 1px dashed #e2e8f0;">
-                                    <td style="padding: 6px 0; color: #64748b;">ความถี่ (ครั้ง)</td>
+                                    <td style="padding: 6px 0; color: #64748b;">à¸„à¸§à¸²à¸¡à¸–à¸µà¹ˆ (à¸„à¸£à¸±à¹‰à¸‡)</td>
                                     <td style="padding: 6px 0; text-align: right; font-weight: bold; color: #0f172a;">${group.count}</td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 6px 0; color: #64748b;">ยอดรวม (บาท)</td>
+                                    <td style="padding: 6px 0; color: #64748b;">à¸¢à¸­à¸”à¸£à¸§à¸¡ (à¸šà¸²à¸—)</td>
                                     <td style="padding: 6px 0; text-align: right; font-weight: bold; color: #e11d48; font-size: 13px;">${group.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                 </tr>
                             </table>
@@ -344,10 +355,10 @@ const runDashboard = () => {
                     <div style="font-family: 'Sarabun', sans-serif; text-align: center; min-width: 120px;">
                         <div style="font-weight: bold; color: #1e293b; font-size: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 4px;">${group.location}</div>
                         <div style="font-size: 11px; color: #64748b;">
-                            ความถี่: <span style="font-weight: bold; color: #4f46e5;">${group.count} ครั้ง</span>
+                            à¸„à¸§à¸²à¸¡à¸–à¸µà¹ˆ: <span style="font-weight: bold; color: #4f46e5;">${group.count} à¸„à¸£à¸±à¹‰à¸‡</span>
                         </div>
                         <div style="font-size: 11px; color: #64748b;">
-                            ยอดรวม: <span style="font-weight: bold; color: #e11d48;">${group.amount.toLocaleString('en-US')} ฿</span>
+                            à¸¢à¸­à¸”à¸£à¸§à¸¡: <span style="font-weight: bold; color: #e11d48;">${group.amount.toLocaleString('en-US')} à¸¿</span>
                         </div>
                     </div>
                 `;
@@ -390,10 +401,10 @@ const runDashboard = () => {
                     {icon} {title}
                 </div>
                 <div className="text-3xl xl:text-4xl font-black text-slate-800 leading-none mb-2 tabular-nums">{count}</div>
-                <div className="text-[11px] text-slate-400 font-medium mb-4">รายการทั้งหมด</div>
+                <div className="text-[11px] text-slate-400 font-medium mb-4">à¸£à¸²à¸¢à¸à¸²à¸£à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”</div>
                 <div className="w-full h-px bg-slate-50 mb-3"></div>
                 <div className="text-[10px] text-indigo-600 font-bold flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50/50 rounded-full group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                    <Icons.ClipboardList size={12} /> ดูราย ภ.จว.
+                    <Icons.ClipboardList size={12} /> à¸”à¸¹à¸£à¸²à¸¢ à¸ .à¸ˆà¸§.
                 </div>
             </div>
         );
@@ -407,7 +418,7 @@ const runDashboard = () => {
         const [pinInput, setPinInput] = useState("");
         const [pinError, setPinError] = useState(false);
         
-        // 🚨 State สำหรับจัดการ Custom Alert Pop-up
+        // ðŸš¨ State à¸ªà¸³à¸«à¸£à¸±à¸šà¸ˆà¸±à¸”à¸à¸²à¸£ Custom Alert Pop-up
         const [customAlert, setCustomAlert] = useState({ isOpen: false, title: '', message: '' });
 
         const [data, setData] = useState([]);
@@ -438,11 +449,11 @@ const runDashboard = () => {
         const [endTime, setEndTime] = useState("");
         const [muleSearch, setMuleSearch] = useState("");
 
-        const [timeMode, setTimeMode] = useState('การถอน');
-        const [bankMode, setBankMode] = useState('ยอดเงิน');
-        const [typeMode, setTypeMode] = useState('การถอน');
-        const [unitMode, setUnitMode] = useState('การถอน');
-        const [topRiskMode, setTopRiskMode] = useState('ยอดเงิน');
+        const [timeMode, setTimeMode] = useState('à¸à¸²à¸£à¸–à¸­à¸™');
+        const [bankMode, setBankMode] = useState('à¸¢à¸­à¸”à¹€à¸‡à¸´à¸™');
+        const [typeMode, setTypeMode] = useState('à¸à¸²à¸£à¸–à¸­à¸™');
+        const [unitMode, setUnitMode] = useState('à¸à¸²à¸£à¸–à¸­à¸™');
+        const [topRiskMode, setTopRiskMode] = useState('à¸¢à¸­à¸”à¹€à¸‡à¸´à¸™');
 
         useEffect(() => {
             fetchDataFromDB();
@@ -504,7 +515,7 @@ const runDashboard = () => {
                         });
                     });
                 } catch (error) {
-                    return { _failed: true, reason: 'การเชื่อมต่อเครือข่ายล้มเหลว' };
+                    return { _failed: true, reason: 'à¸à¸²à¸£à¹€à¸Šà¸·à¹ˆà¸­à¸¡à¸•à¹ˆà¸­à¹€à¸„à¸£à¸·à¸­à¸‚à¹ˆà¸²à¸¢à¸¥à¹‰à¸¡à¹€à¸«à¸¥à¸§' };
                 }
             };
 
@@ -512,7 +523,7 @@ const runDashboard = () => {
             const branchData = await fetchAndParseCSV(branchCsvUrl, 'Branch');
 
             if (atmData._failed && branchData._failed) {
-                setDbErrorMsg("ไม่สามารถดึงข้อมูล CSV ได้ กรุณาตรวจสอบลิงก์");
+                setDbErrorMsg("à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸”à¸¶à¸‡à¸‚à¹‰à¸­à¸¡à¸¹à¸¥ CSV à¹„à¸”à¹‰ à¸à¸£à¸¸à¸“à¸²à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¸¥à¸´à¸‡à¸à¹Œ");
                 setIsFetchingDB(false);
                 return;
             }
@@ -524,7 +535,7 @@ const runDashboard = () => {
             const normalizedData = combinedRaw.map((item, idx) => {
                 let cDate = '';
                 let cTime = '';
-                const rawDT = item['วันเวลาโอน'] || item.complaint_date || item.date || '';
+                const rawDT = item['à¸§à¸±à¸™à¹€à¸§à¸¥à¸²à¹‚à¸­à¸™'] || item.complaint_date || item.date || '';
 
                 if (rawDT) {
                     const dtStr = String(rawDT).trim();
@@ -548,62 +559,62 @@ const runDashboard = () => {
                 }
                 if (!cTime) cTime = item.transfer_time || item.time || '12:00:00';
 
-                let tCode = item['Tracking Code'] || item['Tracking'] || item.tracking_code || item.tracking || item['หมายเลขติดตาม'] || '-';
+                let tCode = item['Tracking Code'] || item['Tracking'] || item.tracking_code || item.tracking || item['à¸«à¸¡à¸²à¸¢à¹€à¸¥à¸‚à¸•à¸´à¸”à¸•à¸²à¸¡'] || '-';
                 if (tCode === '-') tCode = item['Bank Case ID'] || item.inst_id || item.case_id || '-';
 
-                let aLoc = item['สถานที่ตั้ง'] || item['สาขา'] || item['ชื่อสาขา'] || item['สาขาที่เกิดเหตุ'] || item['สถานที่เกิดเหตุ'] || item['สถานที่ตั้งตู้'] || item['จุดติดตั้ง'] || item['รหัสเครื่อง ATM'] || item['รหัสเครื่อง'] || item.branch_name;
+                let aLoc = item['à¸ªà¸–à¸²à¸™à¸—à¸µà¹ˆà¸•à¸±à¹‰à¸‡'] || item['à¸ªà¸²à¸‚à¸²'] || item['à¸Šà¸·à¹ˆà¸­à¸ªà¸²à¸‚à¸²'] || item['à¸ªà¸²à¸‚à¸²à¸—à¸µà¹ˆà¹€à¸à¸´à¸”à¹€à¸«à¸•à¸¸'] || item['à¸ªà¸–à¸²à¸™à¸—à¸µà¹ˆà¹€à¸à¸´à¸”à¹€à¸«à¸•à¸¸'] || item['à¸ªà¸–à¸²à¸™à¸—à¸µà¹ˆà¸•à¸±à¹‰à¸‡à¸•à¸¹à¹‰'] || item['à¸ˆà¸¸à¸”à¸•à¸´à¸”à¸•à¸±à¹‰à¸‡'] || item['à¸£à¸«à¸±à¸ªà¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡ ATM'] || item['à¸£à¸«à¸±à¸ªà¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡'] || item.branch_name;
                 if (!aLoc) {
-                    const foundBranchKey = Object.keys(item).find(k => k.includes('สาขา') || k.toLowerCase().includes('branch'));
+                    const foundBranchKey = Object.keys(item).find(k => k.includes('à¸ªà¸²à¸‚à¸²') || k.toLowerCase().includes('branch'));
                     if (foundBranchKey) aLoc = item[foundBranchKey];
                 }
-                if (!aLoc) aLoc = item.ol3 || (item['อำเภอ/เขต'] ? item['อำเภอ/เขต'] + ' ' + (item['ตำบล/แขวง'] || '') : 'ไม่ระบุ');
+                if (!aLoc) aLoc = item.ol3 || (item['à¸­à¸³à¹€à¸ à¸­/à¹€à¸‚à¸•'] ? item['à¸­à¸³à¹€à¸ à¸­/à¹€à¸‚à¸•'] + ' ' + (item['à¸•à¸³à¸šà¸¥/à¹à¸‚à¸§à¸‡'] || '') : 'à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸');
 
-                let rawProv = item['ภ.จว.'] || item['ภ.จว'] || item['จังหวัด'] || item['Province'] || item['province'] || item.atm_province || '';
+                let rawProv = item['à¸ .à¸ˆà¸§.'] || item['à¸ .à¸ˆà¸§'] || item['à¸ˆà¸±à¸‡à¸«à¸§à¸±à¸”'] || item['Province'] || item['province'] || item.atm_province || '';
                 if (!rawProv) {
-                    const foundKey = Object.keys(item).find(k => k.includes('จังหวัด') || k.toLowerCase().includes('prov') || k.includes('ภ.จว'));
+                    const foundKey = Object.keys(item).find(k => k.includes('à¸ˆà¸±à¸‡à¸«à¸§à¸±à¸”') || k.toLowerCase().includes('prov') || k.includes('à¸ .à¸ˆà¸§'));
                     if (foundKey) rawProv = item[foundKey];
                 }
-                let cProv = rawProv ? String(rawProv).trim() : 'ไม่ระบุ';
-                cProv = cProv.replace(/^จังหวัด/, '').replace(/^ภ\.จว\./, '').replace(/^ภ\.จว/, '').trim();
-                if (cProv === '-' || cProv === '') cProv = 'ไม่ระบุ';
+                let cProv = rawProv ? String(rawProv).trim() : 'à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸';
+                cProv = cProv.replace(/^à¸ˆà¸±à¸‡à¸«à¸§à¸±à¸”/, '').replace(/^à¸ \.à¸ˆà¸§\./, '').replace(/^à¸ \.à¸ˆà¸§/, '').trim();
+                if (cProv === '-' || cProv === '') cProv = 'à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸';
 
-                let respStation = item['สน./สภ.ที่รับผิดชอบ'] || item['สน./สภ. ที่รับผิดชอบ'] || '-';
-                let respProv = item['ภ.จว.ที่รับผิดชอบ'] || item['ภ.จว. ที่รับผิดชอบ'] || '-';
-                let respRegion = item['บช.ที่รับผิดชอบ'] || item['บช. ที่รับผิดชอบ'] || '-';
+                let respStation = item['à¸ªà¸™./à¸ªà¸ .à¸—à¸µà¹ˆà¸£à¸±à¸šà¸œà¸´à¸”à¸Šà¸­à¸š'] || item['à¸ªà¸™./à¸ªà¸ . à¸—à¸µà¹ˆà¸£à¸±à¸šà¸œà¸´à¸”à¸Šà¸­à¸š'] || '-';
+                let respProv = item['à¸ .à¸ˆà¸§.à¸—à¸µà¹ˆà¸£à¸±à¸šà¸œà¸´à¸”à¸Šà¸­à¸š'] || item['à¸ .à¸ˆà¸§. à¸—à¸µà¹ˆà¸£à¸±à¸šà¸œà¸´à¸”à¸Šà¸­à¸š'] || '-';
+                let respRegion = item['à¸šà¸Š.à¸—à¸µà¹ˆà¸£à¸±à¸šà¸œà¸´à¸”à¸Šà¸­à¸š'] || item['à¸šà¸Š. à¸—à¸µà¹ˆà¸£à¸±à¸šà¸œà¸´à¸”à¸Šà¸­à¸š'] || '-';
 
                 return {
                     id: `db-${idx}`,
                     _sheet_row_index: item._sheet_row_index,
-                    inst_id: item['Bank Case ID'] || item.inst_id || item.case_id || item['รหัสเครื่อง'] || item['รหัสเครื่อง ATM'] || item['สาขา'] || `GEN-${idx}`,
+                    inst_id: item['Bank Case ID'] || item.inst_id || item.case_id || item['à¸£à¸«à¸±à¸ªà¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡'] || item['à¸£à¸«à¸±à¸ªà¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡ ATM'] || item['à¸ªà¸²à¸‚à¸²'] || `GEN-${idx}`,
                     tracking_code: tCode,
                     atm_location: aLoc,
-                    atm_name: item['ชื่อเครื่อง ATM'] || '',
-                    branch_address: item['ที่อยู่สาขา'] || '',
+                    atm_name: item['à¸Šà¸·à¹ˆà¸­à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡ ATM'] || '',
+                    branch_address: item['à¸—à¸µà¹ˆà¸­à¸¢à¸¹à¹ˆà¸ªà¸²à¸‚à¸²'] || '',
                     source_type: item['_source_type'],
-                    status_name: item['สถานะติดตามงาน'] || item['สถานะ'] || item.status_name || item.status || "รอรับเรื่อง",
-                    note: item['หมายเหตุ'] || item.note || "-",
-                    report_link: item['link คุมรายงานสืบ'] || item['link'] || "",
+                    status_name: item['à¸ªà¸–à¸²à¸™à¸°à¸•à¸´à¸”à¸•à¸²à¸¡à¸‡à¸²à¸™'] || item['à¸ªà¸–à¸²à¸™à¸°'] || item.status_name || item.status || "à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡",
+                    note: item['à¸«à¸¡à¸²à¸¢à¹€à¸«à¸•à¸¸'] || item.note || "-",
+                    report_link: item['link à¸„à¸¸à¸¡à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸·à¸š'] || item['link'] || "",
                     resp_station: respStation,
                     resp_prov: respProv,
                     resp_region: respRegion,
-                    case_type_detail: item['_source_type'] === "ATM" ? "ถอนเงินสดผ่านตู้เอทีเอ็ม" : "ถอนเงินสดที่สาขา",
-                    transfer_amount: item['จำนวนเงิน'] || item.transfer_amount || item.amount || 0,
+                    case_type_detail: item['_source_type'] === "ATM" ? "à¸–à¸­à¸™à¹€à¸‡à¸´à¸™à¸ªà¸”à¸œà¹ˆà¸²à¸™à¸•à¸¹à¹‰à¹€à¸­à¸—à¸µà¹€à¸­à¹‡à¸¡" : "à¸–à¸­à¸™à¹€à¸‡à¸´à¸™à¸ªà¸”à¸—à¸µà¹ˆà¸ªà¸²à¸‚à¸²",
+                    transfer_amount: item['à¸ˆà¸³à¸™à¸§à¸™à¹€à¸‡à¸´à¸™'] || item.transfer_amount || item.amount || 0,
                     complaint_date: cDate,
                     transfer_time: cTime,
-                    atm_bank_code: item['เจ้าของเครื่อง'] || item['ธนาคารที่ถอน'] || item.atm_bank_code || item.bank || 'ไม่ระบุ',
-                    atm_machinecode: item['รหัสเครื่อง ATM'] || item.atm_machinecode || item.atm_id || (item._source_type === "ATM" ? '-' : 'สาขา'),
-                    atm_lat: item['Latitude'] || item['latitude'] || item['ละติจูด'] || item.atm_lat || item.lat || '',
-                    atm_lon: item['Longitude'] || item['longitude'] || item['ลองจิจูด'] || item.atm_lon || item.lon || '',
+                    atm_bank_code: item['à¹€à¸ˆà¹‰à¸²à¸‚à¸­à¸‡à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡'] || item['à¸˜à¸™à¸²à¸„à¸²à¸£à¸—à¸µà¹ˆà¸–à¸­à¸™'] || item.atm_bank_code || item.bank || 'à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸',
+                    atm_machinecode: item['à¸£à¸«à¸±à¸ªà¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡ ATM'] || item.atm_machinecode || item.atm_id || (item._source_type === "ATM" ? '-' : 'à¸ªà¸²à¸‚à¸²'),
+                    atm_lat: item['Latitude'] || item['latitude'] || item['à¸¥à¸°à¸•à¸´à¸ˆà¸¹à¸”'] || item.atm_lat || item.lat || '',
+                    atm_lon: item['Longitude'] || item['longitude'] || item['à¸¥à¸­à¸‡à¸ˆà¸´à¸ˆà¸¹à¸”'] || item.atm_lon || item.lon || '',
                     atm_province: cProv,
-                    pol_region: item['ภูธร'] || item.pol_region || 'ภ.8',
-                    ol2: item['จังหวัด'] || item.ol2 || item.province || '',
-                    ol3: item['อำเภอ/เขต'] ? item['อำเภอ/เขต'] + ' ' + (item['ตำบล/แขวง'] || '') : item.ol3 || 'ไม่ระบุ',
-                    from_account_name: item['ชื่อบัญชีที่ถอน'] || item.from_account_name || item.account_name || 'ไม่ระบุ',
-                    from_account_no: item['เลขบัญชีที่ถอน'] || item.from_account_no || item.account_no || '-',
-                    from_bank_shortname: item['ธนาคารที่ถอน'] || item.from_bank_shortname || item.bank || '-',
-                    from_account_layout: item['แถว'] || item.from_account_layout || "บัญชีม้า",
-                    // 🚨 ดึงเวลาอัปเดตล่าสุดจากชีต
-                    last_updated: item['เวลาอัปเดตล่าสุด'] || "",
+                    pol_region: item['à¸ à¸¹à¸˜à¸£'] || item.pol_region || 'à¸ .8',
+                    ol2: item['à¸ˆà¸±à¸‡à¸«à¸§à¸±à¸”'] || item.ol2 || item.province || '',
+                    ol3: item['à¸­à¸³à¹€à¸ à¸­/à¹€à¸‚à¸•'] ? item['à¸­à¸³à¹€à¸ à¸­/à¹€à¸‚à¸•'] + ' ' + (item['à¸•à¸³à¸šà¸¥/à¹à¸‚à¸§à¸‡'] || '') : item.ol3 || 'à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸',
+                    from_account_name: item['à¸Šà¸·à¹ˆà¸­à¸šà¸±à¸à¸Šà¸µà¸—à¸µà¹ˆà¸–à¸­à¸™'] || item.from_account_name || item.account_name || 'à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸',
+                    from_account_no: item['à¹€à¸¥à¸‚à¸šà¸±à¸à¸Šà¸µà¸—à¸µà¹ˆà¸–à¸­à¸™'] || item.from_account_no || item.account_no || '-',
+                    from_bank_shortname: item['à¸˜à¸™à¸²à¸„à¸²à¸£à¸—à¸µà¹ˆà¸–à¸­à¸™'] || item.from_bank_shortname || item.bank || '-',
+                    from_account_layout: item['à¹à¸–à¸§'] || item.from_account_layout || "à¸šà¸±à¸à¸Šà¸µà¸¡à¹‰à¸²",
+                    // ðŸš¨ à¸”à¸¶à¸‡à¹€à¸§à¸¥à¸²à¸­à¸±à¸›à¹€à¸”à¸•à¸¥à¹ˆà¸²à¸ªà¸¸à¸”à¸ˆà¸²à¸à¸Šà¸µà¸•
+                    last_updated: item['à¹€à¸§à¸¥à¸²à¸­à¸±à¸›à¹€à¸”à¸•à¸¥à¹ˆà¸²à¸ªà¸¸à¸”'] || item['เวลาอัปเดตล่าสุด'] || "",
                     ...item
                 };
             }).filter(item => parseAmount(item.transfer_amount) > 0 || item.from_account_no !== '-');
@@ -614,7 +625,7 @@ const runDashboard = () => {
             normalizedData.forEach(item => {
                 if (!initialStatus[item.id]) {
                     initialStatus[item.id] = {
-                        status: item.status_name || "รอรับเรื่อง",
+                        status: item.status_name || "à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡",
                         note: item.note || "-",
                         report_link: item.report_link || "",
                         last_updated: item.last_updated || ""
@@ -635,7 +646,8 @@ const runDashboard = () => {
                 row_index: row._sheet_row_index,
                 status: newStatus,
                 note: newNote,
-                report_link: newLink
+                report_link: newLink,
+                timestamp: formatDateTime()
             };
 
             if (typeof google !== 'undefined' && google.script && google.script.run) {
@@ -645,7 +657,7 @@ const runDashboard = () => {
                         setSavingType(null);
                     })
                     .withFailureHandler(function (error) {
-                        alert("เกิดข้อผิดพลาดในการบันทึก: " + error.message);
+                        alert("à¹€à¸à¸´à¸”à¸‚à¹‰à¸­à¸œà¸´à¸”à¸žà¸¥à¸²à¸”à¹ƒà¸™à¸à¸²à¸£à¸šà¸±à¸™à¸—à¸¶à¸: " + error.message);
                         setSavingId(null);
                         setSavingType(null);
                     })
@@ -660,14 +672,14 @@ const runDashboard = () => {
 
         const handleCardClick = (statusName) => {
             const detailItems = filteredData.filter(d => {
-                const currentStatus = taskStatus[d.id]?.status || d.status_name || "รอรับเรื่อง";
+                const currentStatus = taskStatus[d.id]?.status || d.status_name || "à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡";
                 return currentStatus === statusName;
             });
             const totalAmt = detailItems.reduce((sum, item) => sum + parseAmount(item.transfer_amount), 0);
 
             setBarDetailInfo({
                 type: 'task',
-                title: `สถานะ: ${statusName} (ทั้งหมด)`,
+                title: `à¸ªà¸–à¸²à¸™à¸°: ${statusName} (à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”)`,
                 summary: { count: detailItems.length, amount: totalAmt },
                 cases: detailItems,
                 rawItems: detailItems
@@ -685,33 +697,33 @@ const runDashboard = () => {
             let modalType = 'mule';
 
             if (chartType === 'time') {
-                title = `หมวดหมู่เวลา: ${entry.hour} น.`;
+                title = `à¸«à¸¡à¸§à¸”à¸«à¸¡à¸¹à¹ˆà¹€à¸§à¸¥à¸²: ${entry.hour} à¸™.`;
                 detailItems = filteredData.filter(d => {
                     const h = getHourFromTime(d.transfer_time);
                     return h !== null && `${h.toString().padStart(2, '0')}:00` === entry.hour;
                 });
             } else if (chartType === 'bank') {
-                title = `ธนาคาร: ${entry.name}`;
+                title = `à¸˜à¸™à¸²à¸„à¸²à¸£: ${entry.name}`;
                 detailItems = filteredData.filter(d => (d.atm_bank_code || "Unknown") === entry.name);
             } else if (chartType === 'type') {
-                title = `รูปแบบการถอนเงิน: ${entry.name}`;
+                title = `à¸£à¸¹à¸›à¹à¸šà¸šà¸à¸²à¸£à¸–à¸­à¸™à¹€à¸‡à¸´à¸™: ${entry.name}`;
                 detailItems = filteredData.filter(d => {
-                    const t = d.case_type_detail.includes('เอทีเอ็ม') ? "ถอนเงินสดผ่านตู้เอทีเอ็ม" : "ถอนเงินสดที่สาขา";
+                    const t = d.case_type_detail.includes('à¹€à¸­à¸—à¸µà¹€à¸­à¹‡à¸¡') ? "à¸–à¸­à¸™à¹€à¸‡à¸´à¸™à¸ªà¸”à¸œà¹ˆà¸²à¸™à¸•à¸¹à¹‰à¹€à¸­à¸—à¸µà¹€à¸­à¹‡à¸¡" : "à¸–à¸­à¸™à¹€à¸‡à¸´à¸™à¸ªà¸”à¸—à¸µà¹ˆà¸ªà¸²à¸‚à¸²";
                     return t === entry.name;
                 });
             } else if (chartType === 'unit') {
-                title = `หน่วยงาน/จังหวัด: ${entry.name}`;
+                title = `à¸«à¸™à¹ˆà¸§à¸¢à¸‡à¸²à¸™/à¸ˆà¸±à¸‡à¸«à¸§à¸±à¸”: ${entry.name}`;
                 detailItems = filteredData.filter(d => {
-                    const u = d.atm_province && d.atm_province !== "Unknown" ? d.atm_province : "ไม่ระบุ";
-                    return u.replace(/^จังหวัด/, '').replace(/^ภ\.จว\./, '').replace(/^ภ\.จว/, '').trim() === entry.name;
+                    const u = d.atm_province && d.atm_province !== "Unknown" ? d.atm_province : "à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸";
+                    return u.replace(/^à¸ˆà¸±à¸‡à¸«à¸§à¸±à¸”/, '').replace(/^à¸ \.à¸ˆà¸§\./, '').replace(/^à¸ \.à¸ˆà¸§/, '').trim() === entry.name;
                 });
             } else if (chartType === 'task-prov') {
                 modalType = 'task';
                 const clickedStatus = subType;
-                title = `จังหวัด: ${entry.name} | สถานะ: ${clickedStatus}`;
+                title = `à¸ˆà¸±à¸‡à¸«à¸§à¸±à¸”: ${entry.name} | à¸ªà¸–à¸²à¸™à¸°: ${clickedStatus}`;
                 detailItems = filteredData.filter(d => {
-                    const prov = d.atm_province && d.atm_province !== "Unknown" && d.atm_province !== "ไม่ระบุ" ? d.atm_province.replace(/^จังหวัด/, '').replace(/^ภ\.จว\./, '').replace(/^ภ\.จว/, '').trim() : "ไม่ระบุ";
-                    const currentStatus = taskStatus[d.id]?.status || d.status_name || "รอรับเรื่อง";
+                    const prov = d.atm_province && d.atm_province !== "Unknown" && d.atm_province !== "à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸" ? d.atm_province.replace(/^à¸ˆà¸±à¸‡à¸«à¸§à¸±à¸”/, '').replace(/^à¸ \.à¸ˆà¸§\./, '').replace(/^à¸ \.à¸ˆà¸§/, '').trim() : "à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸";
+                    const currentStatus = taskStatus[d.id]?.status || d.status_name || "à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡";
                     return prov === entry.name && currentStatus === clickedStatus;
                 });
                 const totalAmt = detailItems.reduce((sum, item) => sum + parseAmount(item.transfer_amount), 0);
@@ -721,9 +733,9 @@ const runDashboard = () => {
                 return;
             } else if (chartType === 'status') {
                 modalType = 'task';
-                title = `สถานะ: ${entry.name}`;
+                title = `à¸ªà¸–à¸²à¸™à¸°: ${entry.name}`;
                 detailItems = filteredData.filter(d => {
-                    const currentStatus = taskStatus[d.id]?.status || d.status_name || "รอรับเรื่อง";
+                    const currentStatus = taskStatus[d.id]?.status || d.status_name || "à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡";
                     return currentStatus === entry.name;
                 });
                 const totalAmt = detailItems.reduce((sum, item) => sum + parseAmount(item.transfer_amount), 0);
@@ -740,9 +752,9 @@ const runDashboard = () => {
                 if (!mules[key]) mules[key] = { name: d.from_account_name, accNo: key, bank: d.from_bank_shortname, count: 0, amount: 0, types: new Set(), provinces: new Set() };
                 mules[key].count += 1;
                 mules[key].amount += parseAmount(d.transfer_amount);
-                if (d.case_type_detail.includes("เอทีเอ็ม") || d._source_type === "ATM") mules[key].types.add("ATM");
-                else mules[key].types.add("สาขา");
-                const p = d.atm_province && d.atm_province !== "Unknown" && d.atm_province !== "ไม่ระบุสถานที่" ? d.atm_province.replace(/^จังหวัด/, '').replace(/^ภ\.จว\./, '').replace(/^ภ\.จว/, '').trim() : "ไม่ระบุ";
+                if (d.case_type_detail.includes("à¹€à¸­à¸—à¸µà¹€à¸­à¹‡à¸¡") || d._source_type === "ATM") mules[key].types.add("ATM");
+                else mules[key].types.add("à¸ªà¸²à¸‚à¸²");
+                const p = d.atm_province && d.atm_province !== "Unknown" && d.atm_province !== "à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸à¸ªà¸–à¸²à¸™à¸—à¸µà¹ˆ" ? d.atm_province.replace(/^à¸ˆà¸±à¸‡à¸«à¸§à¸±à¸”/, '').replace(/^à¸ \.à¸ˆà¸§\./, '').replace(/^à¸ \.à¸ˆà¸§/, '').trim() : "à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸";
                 mules[key].provinces.add(p);
             });
 
@@ -760,7 +772,7 @@ const runDashboard = () => {
             if (!barDetailInfo.rawItems) return [];
             const counts = {};
             barDetailInfo.rawItems.forEach(d => {
-                let p = d.atm_province && d.atm_province !== "Unknown" && d.atm_province !== "ไม่ระบุ" ? d.atm_province.replace(/^จังหวัด/, '').replace(/^ภ\.จว\./, '').replace(/^ภ\.จว/, '').trim() : "ไม่ระบุ";
+                let p = d.atm_province && d.atm_province !== "Unknown" && d.atm_province !== "à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸" ? d.atm_province.replace(/^à¸ˆà¸±à¸‡à¸«à¸§à¸±à¸”/, '').replace(/^à¸ \.à¸ˆà¸§\./, '').replace(/^à¸ \.à¸ˆà¸§/, '').trim() : "à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸";
                 if (!counts[p]) counts[p] = 0;
                 counts[p]++;
             });
@@ -771,30 +783,30 @@ const runDashboard = () => {
             let csvContent = "\uFEFF";
             let rows = [];
             if (barDetailInfo.type === 'task') {
-                rows.push(["ลำดับ", "Tracking", "รูปแบบ", "ธนาคารที่ถอน", "สถานที่/สาขาที่เกิดเหตุ", "Latitude", "Longitude", "จังหวัด", "วันที่ร้องเรียน", "เวลา", "ยอดความเสียหาย (บาท)", "สน./สภ. ที่รับผิดชอบ", "ภ.จว. ที่รับผิดชอบ", "สถานะ", "หมายเหตุ", "ลิงก์รายงาน"].join(","));
+                rows.push(["à¸¥à¸³à¸”à¸±à¸š", "Tracking", "à¸£à¸¹à¸›à¹à¸šà¸š", "à¸˜à¸™à¸²à¸„à¸²à¸£à¸—à¸µà¹ˆà¸–à¸­à¸™", "à¸ªà¸–à¸²à¸™à¸—à¸µà¹ˆ/à¸ªà¸²à¸‚à¸²à¸—à¸µà¹ˆà¹€à¸à¸´à¸”à¹€à¸«à¸•à¸¸", "Latitude", "Longitude", "à¸ˆà¸±à¸‡à¸«à¸§à¸±à¸”", "à¸§à¸±à¸™à¸—à¸µà¹ˆà¸£à¹‰à¸­à¸‡à¹€à¸£à¸µà¸¢à¸™", "à¹€à¸§à¸¥à¸²", "à¸¢à¸­à¸”à¸„à¸§à¸²à¸¡à¹€à¸ªà¸µà¸¢à¸«à¸²à¸¢ (à¸šà¸²à¸—)", "à¸ªà¸™./à¸ªà¸ . à¸—à¸µà¹ˆà¸£à¸±à¸šà¸œà¸´à¸”à¸Šà¸­à¸š", "à¸ .à¸ˆà¸§. à¸—à¸µà¹ˆà¸£à¸±à¸šà¸œà¸´à¸”à¸Šà¸­à¸š", "à¸ªà¸–à¸²à¸™à¸°", "à¸«à¸¡à¸²à¸¢à¹€à¸«à¸•à¸¸", "à¸¥à¸´à¸‡à¸à¹Œà¸£à¸²à¸¢à¸‡à¸²à¸™"].join(","));
                 sortedModalCases.forEach((row, idx) => {
-                    const status = taskStatus[row.id]?.status || row.status_name || "รอรับเรื่อง";
+                    const status = taskStatus[row.id]?.status || row.status_name || "à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡";
                     const note = taskStatus[row.id]?.note || row.note || "-";
                     const link = taskStatus[row.id]?.report_link || row.report_link || "";
                     const amount = parseAmount(row.transfer_amount);
-                    const prov = row.atm_province ? row.atm_province.replace(/^จังหวัด/, '').replace(/^ภ\.จว\./, '').trim() : 'ไม่ระบุ';
-                    const bank = row.atm_bank_code || 'ไม่ระบุ';
+                    const prov = row.atm_province ? row.atm_province.replace(/^à¸ˆà¸±à¸‡à¸«à¸§à¸±à¸”/, '').replace(/^à¸ \.à¸ˆà¸§\./, '').trim() : 'à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸';
+                    const bank = row.atm_bank_code || 'à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸';
                     const lat = row.atm_lat || '';
                     const lon = row.atm_lon || '';
                     rows.push([idx + 1, `"${row.tracking_code}"`, `"${row.case_type_detail}"`, `"${bank}"`, `"${row.atm_location}"`, `"${lat}"`, `"${lon}"`, `"${prov}"`, `"${row.complaint_date}"`, `"${row.transfer_time || ''}"`, amount, `"${row.resp_station}"`, `"${row.resp_prov}"`, `"${status}"`, `"${note}"`, `"${link}"`].join(","));
                 });
             } else {
-                rows.push(["ลำดับ", "ชื่อบัญชีม้า", "เลขที่บัญชี", "ธนาคาร", "ประเภท", "จังหวัดที่ถอน", "รับโอน (ครั้ง)", "ยอดรวม (บาท)"].join(","));
+                rows.push(["à¸¥à¸³à¸”à¸±à¸š", "à¸Šà¸·à¹ˆà¸­à¸šà¸±à¸à¸Šà¸µà¸¡à¹‰à¸²", "à¹€à¸¥à¸‚à¸—à¸µà¹ˆà¸šà¸±à¸à¸Šà¸µ", "à¸˜à¸™à¸²à¸„à¸²à¸£", "à¸›à¸£à¸°à¹€à¸ à¸—", "à¸ˆà¸±à¸‡à¸«à¸§à¸±à¸”à¸—à¸µà¹ˆà¸–à¸­à¸™", "à¸£à¸±à¸šà¹‚à¸­à¸™ (à¸„à¸£à¸±à¹‰à¸‡)", "à¸¢à¸­à¸”à¸£à¸§à¸¡ (à¸šà¸²à¸—)"].join(","));
                 sortedModalMules.forEach((mule, idx) => {
                     rows.push([idx + 1, `"${mule.name}"`, `="'${mule.accNo}"`, `"${mule.bank}"`, `"${mule.typeStr}"`, `"${mule.provinceStr}"`, mule.count, mule.amount].join(","));
                 });
             }
-            csvContent += rows.join("\n");
+            csvContent += rows.join(String.fromCharCode(10));
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.setAttribute("href", url);
-            let safeTitle = barDetailInfo.title.replace(/[^a-zA-Z0-9ก-๙]/g, '_');
+            let safeTitle = barDetailInfo.title.replace(/[^a-zA-Z0-9à¸-à¹™]/g, '_');
             link.setAttribute("download", `Export_Data_${safeTitle}.csv`);
             document.body.appendChild(link);
             link.click();
@@ -820,7 +832,7 @@ const runDashboard = () => {
             let filteredItems = barDetailInfo.cases;
             if (modalProvinceFilter) {
                 filteredItems = filteredItems.filter(row => {
-                    const prov = row.atm_province ? row.atm_province.replace(/^จังหวัด/, '').replace(/^ภ\.จว\./, '').replace(/^ภ\.จว/, '').trim() : 'ไม่ระบุ';
+                    const prov = row.atm_province ? row.atm_province.replace(/^à¸ˆà¸±à¸‡à¸«à¸§à¸±à¸”/, '').replace(/^à¸ \.à¸ˆà¸§\./, '').replace(/^à¸ \.à¸ˆà¸§/, '').trim() : 'à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸';
                     return prov === modalProvinceFilter;
                 });
             }
@@ -848,7 +860,7 @@ const runDashboard = () => {
             let validData = data;
             if (selectedProv !== "All") validData = validData.filter(d => d.atm_province === selectedProv);
             if (selectedType !== "All") validData = validData.filter(d => d.case_type_detail === selectedType);
-            const set = new Set(validData.map(d => d.atm_location).filter(l => l && l !== 'ไม่ระบุ'));
+            const set = new Set(validData.map(d => d.atm_location).filter(l => l && l !== 'à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸'));
             return Array.from(set).sort();
         }, [data, selectedProv, selectedType]);
 
@@ -859,7 +871,7 @@ const runDashboard = () => {
 
         const statusOptions = useMemo(() => {
             const set = new Set(Object.values(taskStatus).map(s => s.status));
-            ["รอรับเรื่อง", "อยู่ระหว่างสืบสวน", "จัดทำรายงานสืบแล้ว", "ส่งคืนต้นสังกัดแล้ว", "ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก..."].forEach(s => set.add(s));
+            ["à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡", "à¸­à¸¢à¸¹à¹ˆà¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡à¸ªà¸·à¸šà¸ªà¸§à¸™", "à¸ˆà¸±à¸”à¸—à¸³à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸·à¸šà¹à¸¥à¹‰à¸§", "à¸ªà¹ˆà¸‡à¸„à¸·à¸™à¸•à¹‰à¸™à¸ªà¸±à¸‡à¸à¸±à¸”à¹à¸¥à¹‰à¸§", "à¹„à¸¡à¹ˆà¸žà¸š/à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸”à¸³à¹€à¸™à¸´à¸™à¸à¸²à¸£à¹„à¸”à¹‰à¹€à¸™à¸·à¹ˆà¸­à¸‡à¸ˆà¸²à¸..."].forEach(s => set.add(s));
             return Array.from(set);
         }, [taskStatus]);
 
@@ -884,7 +896,7 @@ const runDashboard = () => {
                 if (selectedRespProv !== "All" && item.resp_prov !== selectedRespProv) return false;
                 if (selectedRespStation !== "All" && item.resp_station !== selectedRespStation) return false;
 
-                const currentStatus = taskStatus[item.id]?.status || item.status_name || "รอรับเรื่อง";
+                const currentStatus = taskStatus[item.id]?.status || item.status_name || "à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡";
                 if (selectedStatus !== "All" && currentStatus !== selectedStatus) return false;
 
                 if (startDate || endDate) {
@@ -937,34 +949,34 @@ const runDashboard = () => {
             });
             return Object.values(stats);
         }, [filteredData]);
-        const sortedBankStats = useMemo(() => [...bankStats].sort((a, b) => bankMode === 'ยอดเงิน' ? b.amount - a.amount : b.count - a.count).slice(0, 8), [bankStats, bankMode]);
+        const sortedBankStats = useMemo(() => [...bankStats].sort((a, b) => bankMode === 'à¸¢à¸­à¸”à¹€à¸‡à¸´à¸™' ? b.amount - a.amount : b.count - a.count).slice(0, 8), [bankStats, bankMode]);
 
         const typeStats = useMemo(() => {
-            const stats = { "ถอนเงินสดผ่านตู้เอทีเอ็ม": { name: "ถอนเงินสดผ่านตู้เอทีเอ็ม", count: 0, amount: 0 }, "ถอนเงินสดที่สาขา": { name: "ถอนเงินสดที่สาขา", count: 0, amount: 0 } };
+            const stats = { "à¸–à¸­à¸™à¹€à¸‡à¸´à¸™à¸ªà¸”à¸œà¹ˆà¸²à¸™à¸•à¸¹à¹‰à¹€à¸­à¸—à¸µà¹€à¸­à¹‡à¸¡": { name: "à¸–à¸­à¸™à¹€à¸‡à¸´à¸™à¸ªà¸”à¸œà¹ˆà¸²à¸™à¸•à¸¹à¹‰à¹€à¸­à¸—à¸µà¹€à¸­à¹‡à¸¡", count: 0, amount: 0 }, "à¸–à¸­à¸™à¹€à¸‡à¸´à¸™à¸ªà¸”à¸—à¸µà¹ˆà¸ªà¸²à¸‚à¸²": { name: "à¸–à¸­à¸™à¹€à¸‡à¸´à¸™à¸ªà¸”à¸—à¸µà¹ˆà¸ªà¸²à¸‚à¸²", count: 0, amount: 0 } };
             filteredData.forEach(d => {
-                const type = d.case_type_detail.includes('เอทีเอ็ม') ? "ถอนเงินสดผ่านตู้เอทีเอ็ม" : "ถอนเงินสดที่สาขา";
+                const type = d.case_type_detail.includes('à¹€à¸­à¸—à¸µà¹€à¸­à¹‡à¸¡') ? "à¸–à¸­à¸™à¹€à¸‡à¸´à¸™à¸ªà¸”à¸œà¹ˆà¸²à¸™à¸•à¸¹à¹‰à¹€à¸­à¸—à¸µà¹€à¸­à¹‡à¸¡" : "à¸–à¸­à¸™à¹€à¸‡à¸´à¸™à¸ªà¸”à¸—à¸µà¹ˆà¸ªà¸²à¸‚à¸²";
                 stats[type].count += 1;
                 stats[type].amount += parseAmount(d.transfer_amount);
             });
-            return Object.values(stats).sort((a, b) => typeMode === 'ยอดเงิน' ? b.amount - a.amount : b.count - a.count);
+            return Object.values(stats).sort((a, b) => typeMode === 'à¸¢à¸­à¸”à¹€à¸‡à¸´à¸™' ? b.amount - a.amount : b.count - a.count);
         }, [filteredData, typeMode]);
 
         const unitStats = useMemo(() => {
             const stats = {};
             filteredData.forEach(d => {
-                let u = d.atm_province && d.atm_province !== "Unknown" && d.atm_province !== "ไม่ระบุ" ? d.atm_province : "ไม่ระบุ";
-                u = u.replace(/^จังหวัด/, '').trim();
+                let u = d.atm_province && d.atm_province !== "Unknown" && d.atm_province !== "à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸" ? d.atm_province : "à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸";
+                u = u.replace(/^à¸ˆà¸±à¸‡à¸«à¸§à¸±à¸”/, '').trim();
                 if (!stats[u]) stats[u] = { name: u, count: 0, amount: 0 };
                 stats[u].count += 1;
                 stats[u].amount += parseAmount(d.transfer_amount);
             });
-            return Object.values(stats).sort((a, b) => unitMode === 'ยอดเงิน' ? b.amount - a.amount : b.count - a.count).slice(0, 8);
+            return Object.values(stats).sort((a, b) => unitMode === 'à¸¢à¸­à¸”à¹€à¸‡à¸´à¸™' ? b.amount - a.amount : b.count - a.count).slice(0, 8);
         }, [filteredData, unitMode]);
 
         const atmStats = useMemo(() => {
             const stats = {};
             filteredData.forEach(d => {
-                const loc = d.atm_location || "ไม่ระบุ";
+                const loc = d.atm_location || "à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸";
                 const prov = d.atm_province || "";
                 const key = `${loc}-${prov}`;
                 if (!stats[key]) stats[key] = { location: loc, province: prov, count: 0, amount: 0, lat: parseFloat(d.atm_lat) || null, lon: parseFloat(d.atm_lon) || null };
@@ -974,22 +986,22 @@ const runDashboard = () => {
             });
             return Object.values(stats);
         }, [filteredData]);
-        const sortedAtmStats = useMemo(() => [...atmStats].sort((a, b) => topRiskMode === 'ยอดเงิน' ? b.amount - a.amount : b.count - a.count).slice(0, 10), [atmStats, topRiskMode]);
+        const sortedAtmStats = useMemo(() => [...atmStats].sort((a, b) => topRiskMode === 'à¸¢à¸­à¸”à¹€à¸‡à¸´à¸™' ? b.amount - a.amount : b.count - a.count).slice(0, 10), [atmStats, topRiskMode]);
 
         const trackerStats = useMemo(() => {
-            const stats = { "รอรับเรื่อง": 0, "อยู่ระหว่างสืบสวน": 0, "จัดทำรายงานสืบแล้ว": 0, "ส่งคืนต้นสังกัดแล้ว": 0, "ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก...": 0 };
-            filteredData.forEach(d => { const s = taskStatus[d.id]?.status || "รอรับเรื่อง"; if (stats[s] !== undefined) stats[s]++; });
+            const stats = { "à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡": 0, "à¸­à¸¢à¸¹à¹ˆà¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡à¸ªà¸·à¸šà¸ªà¸§à¸™": 0, "à¸ˆà¸±à¸”à¸—à¸³à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸·à¸šà¹à¸¥à¹‰à¸§": 0, "à¸ªà¹ˆà¸‡à¸„à¸·à¸™à¸•à¹‰à¸™à¸ªà¸±à¸‡à¸à¸±à¸”à¹à¸¥à¹‰à¸§": 0, "à¹„à¸¡à¹ˆà¸žà¸š/à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸”à¸³à¹€à¸™à¸´à¸™à¸à¸²à¸£à¹„à¸”à¹‰à¹€à¸™à¸·à¹ˆà¸­à¸‡à¸ˆà¸²à¸...": 0 };
+            filteredData.forEach(d => { const s = taskStatus[d.id]?.status || "à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡"; if (stats[s] !== undefined) stats[s]++; });
             return stats;
         }, [filteredData, taskStatus]);
-        const totalCompleted = useMemo(() => trackerStats["จัดทำรายงานสืบแล้ว"] + trackerStats["ส่งคืนต้นสังกัดแล้ว"], [trackerStats]);
+        const totalCompleted = useMemo(() => trackerStats["à¸ˆà¸±à¸”à¸—à¸³à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸·à¸šà¹à¸¥à¹‰à¸§"] + trackerStats["à¸ªà¹ˆà¸‡à¸„à¸·à¸™à¸•à¹‰à¸™à¸ªà¸±à¸‡à¸à¸±à¸”à¹à¸¥à¹‰à¸§"], [trackerStats]);
         const successRate = useMemo(() => totalTransactions > 0 ? Math.round((totalCompleted / totalTransactions) * 100) : 0, [totalCompleted, totalTransactions]);
 
         const trackerChartData = useMemo(() => {
             const provinceMap = {};
             filteredData.forEach(d => {
-                const prov = d.atm_province && d.atm_province !== "Unknown" && d.atm_province !== "ไม่ระบุ" ? d.atm_province.replace(/^จังหวัด/, '').replace(/^ภ\.จว\./, '').replace(/^ภ\.จว/, '').trim() : "ไม่ระบุ";
-                if (!provinceMap[prov]) provinceMap[prov] = { name: prov, "รอรับเรื่อง": 0, "อยู่ระหว่างสืบสวน": 0, "จัดทำรายงานสืบแล้ว": 0, "ส่งคืนต้นสังกัดแล้ว": 0, "ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก...": 0, total: 0 };
-                const s = taskStatus[d.id]?.status || d.status_name || "รอรับเรื่อง";
+                const prov = d.atm_province && d.atm_province !== "Unknown" && d.atm_province !== "à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸" ? d.atm_province.replace(/^à¸ˆà¸±à¸‡à¸«à¸§à¸±à¸”/, '').replace(/^à¸ \.à¸ˆà¸§\./, '').replace(/^à¸ \.à¸ˆà¸§/, '').trim() : "à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸";
+                if (!provinceMap[prov]) provinceMap[prov] = { name: prov, "à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡": 0, "à¸­à¸¢à¸¹à¹ˆà¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡à¸ªà¸·à¸šà¸ªà¸§à¸™": 0, "à¸ˆà¸±à¸”à¸—à¸³à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸·à¸šà¹à¸¥à¹‰à¸§": 0, "à¸ªà¹ˆà¸‡à¸„à¸·à¸™à¸•à¹‰à¸™à¸ªà¸±à¸‡à¸à¸±à¸”à¹à¸¥à¹‰à¸§": 0, "à¹„à¸¡à¹ˆà¸žà¸š/à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸”à¸³à¹€à¸™à¸´à¸™à¸à¸²à¸£à¹„à¸”à¹‰à¹€à¸™à¸·à¹ˆà¸­à¸‡à¸ˆà¸²à¸...": 0, total: 0 };
+                const s = taskStatus[d.id]?.status || d.status_name || "à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡";
                 if (provinceMap[prov][s] !== undefined) { provinceMap[prov][s]++; provinceMap[prov].total++; }
             });
             return Object.values(provinceMap).sort((a, b) => b.total - a.total).slice(0, 10);
@@ -1015,14 +1027,14 @@ const runDashboard = () => {
         const responsibleStats = useMemo(() => {
             const stats = {};
             filteredData.forEach(d => {
-                const st = d.resp_station && d.resp_station !== '-' ? d.resp_station : 'ไม่ระบุ';
-                const pr = d.resp_prov && d.resp_prov !== '-' ? d.resp_prov : 'ไม่ระบุ';
+                const st = d.resp_station && d.resp_station !== '-' ? d.resp_station : 'à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸';
+                const pr = d.resp_prov && d.resp_prov !== '-' ? d.resp_prov : 'à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸';
                 const key = `${st}-${pr}`;
                 if (!stats[key]) stats[key] = { station: st, prov: pr, count: 0, amount: 0, pending: 0, completed: 0 };
                 stats[key].count += 1;
                 stats[key].amount += parseAmount(d.transfer_amount);
-                const currentStatus = taskStatus[d.id]?.status || d.status_name || "รอรับเรื่อง";
-                if (currentStatus === 'จัดทำรายงานสืบแล้ว' || currentStatus === 'ส่งคืนต้นสังกัดแล้ว') stats[key].completed += 1;
+                const currentStatus = taskStatus[d.id]?.status || d.status_name || "à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡";
+                if (currentStatus === 'à¸ˆà¸±à¸”à¸—à¸³à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸·à¸šà¹à¸¥à¹‰à¸§' || currentStatus === 'à¸ªà¹ˆà¸‡à¸„à¸·à¸™à¸•à¹‰à¸™à¸ªà¸±à¸‡à¸à¸±à¸”à¹à¸¥à¹‰à¸§') stats[key].completed += 1;
                 else stats[key].pending += 1;
             });
             return Object.values(stats).sort((a, b) => b.count - a.count);
@@ -1045,64 +1057,64 @@ const runDashboard = () => {
                 
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 relative z-10">
                     <div className="col-span-2 md:col-span-4 lg:col-span-2">
-                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block"> ค้นหาแบบไว </label>
+                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block"> à¸„à¹‰à¸™à¸«à¸²à¹à¸šà¸šà¹„à¸§ </label>
                         <div className="relative group">
                             <Icons.Search className="absolute left-3.5 top-3 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={16} />
-                            <input type="text" placeholder="Tracking, บัญชีม้า, สาขา..." className="w-full pl-10 pr-4 py-3 bg-white/50 border border-slate-200 rounded-2xl text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none placeholder:text-slate-300" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+                            <input type="text" placeholder="Tracking, à¸šà¸±à¸à¸Šà¸µà¸¡à¹‰à¸², à¸ªà¸²à¸‚à¸²..." className="w-full pl-10 pr-4 py-3 bg-white/50 border border-slate-200 rounded-2xl text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none placeholder:text-slate-300" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
                         </div>
                     </div>
                     <div className="col-span-1 lg:col-span-1">
-                        <label className="text-[11px] font-bold text-indigo-500 uppercase tracking-widest mb-2 flex items-center gap-1.5"> <Icons.Building size={14} /> ธนาคาร</label>
+                        <label className="text-[11px] font-bold text-indigo-500 uppercase tracking-widest mb-2 flex items-center gap-1.5"> <Icons.Building size={14} /> à¸˜à¸™à¸²à¸„à¸²à¸£</label>
                         <select className="w-full border border-slate-200 rounded-2xl px-3 py-3 text-sm bg-white/80 text-slate-700 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer font-medium" value={selectedBank} onChange={e => setSelectedBank(e.target.value)}>
-                            <option value="All Banks"> ทั้งหมด </option>
+                            <option value="All Banks"> à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” </option>
                             {Object.keys(BANK_COLORS).map(b => <option key={b} value={b}>{b}</option>)}
                         </select>
                     </div>
                     <div className="col-span-1 lg:col-span-1">
-                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block"> พื้นที่(ภ.จว.) </label>
+                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block"> à¸žà¸·à¹‰à¸™à¸—à¸µà¹ˆ(à¸ .à¸ˆà¸§.) </label>
                         <select className="w-full border border-slate-200 rounded-2xl px-3 py-3 text-sm bg-white/80 text-slate-700 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer font-medium" value={selectedProv} onChange={e => { setSelectedProv(e.target.value); setSelectedBranch("All"); }}>
-                            <option value="All"> ทั้งหมด </option>
+                            <option value="All"> à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” </option>
                             {REGION_8_PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
                         </select>
                     </div>
                     <div className="col-span-1 lg:col-span-1">
-                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block"> สถานที่ / ตู้ </label>
+                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block"> à¸ªà¸–à¸²à¸™à¸—à¸µà¹ˆ / à¸•à¸¹à¹‰ </label>
                         <select className="w-full border border-slate-200 rounded-2xl px-3 py-3 text-sm bg-white/80 text-slate-700 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer font-medium" value={selectedBranch} onChange={e => setSelectedBranch(e.target.value)}>
-                            <option value="All"> ทั้งหมด </option>
+                            <option value="All"> à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” </option>
                             {branchOptions.map(b => <option key={b} value={b}>{b}</option>)}
                         </select>
                     </div>
                     <div className="col-span-1 lg:col-span-1">
-                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block"> รูปแบบ </label>
+                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block"> à¸£à¸¹à¸›à¹à¸šà¸š </label>
                         <select className="w-full border border-slate-200 rounded-2xl px-3 py-3 text-sm bg-white/80 text-slate-700 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer font-medium" value={selectedType} onChange={e => { setSelectedType(e.target.value); setSelectedBranch("All"); }}>
-                            <option value="All"> ทั้งหมด </option>
+                            <option value="All"> à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” </option>
                             {typeOptions.map(t => <option key={t} value={t}>{t}</option>)}
                         </select>
                     </div>
 
                     <div className="col-span-1 lg:col-span-2">
-                        <label className="text-[11px] font-bold text-amber-500 uppercase tracking-widest mb-2 flex items-center gap-1.5"> <Icons.Shield size={14} /> ภ.จว.ที่รับผิดชอบ</label>
+                        <label className="text-[11px] font-bold text-amber-500 uppercase tracking-widest mb-2 flex items-center gap-1.5"> <Icons.Shield size={14} /> à¸ .à¸ˆà¸§.à¸—à¸µà¹ˆà¸£à¸±à¸šà¸œà¸´à¸”à¸Šà¸­à¸š</label>
                         <select className="w-full border border-amber-200 rounded-2xl px-3 py-3 text-sm bg-amber-50/30 text-amber-900 outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all cursor-pointer font-medium" value={selectedRespProv} onChange={e => { setSelectedRespProv(e.target.value); setSelectedRespStation("All"); }}>
-                            <option value="All"> ทั้งหมด </option>
+                            <option value="All"> à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” </option>
                             {respProvOptions.map(p => <option key={p} value={p}>{p}</option>)}
                         </select>
                     </div>
                     <div className="col-span-1 lg:col-span-2">
-                        <label className="text-[11px] font-bold text-amber-500 uppercase tracking-widest mb-2 flex items-center gap-1.5"> <Icons.Shield size={14} /> สน./สภ.ที่รับผิดชอบ </label>
+                        <label className="text-[11px] font-bold text-amber-500 uppercase tracking-widest mb-2 flex items-center gap-1.5"> <Icons.Shield size={14} /> à¸ªà¸™./à¸ªà¸ .à¸—à¸µà¹ˆà¸£à¸±à¸šà¸œà¸´à¸”à¸Šà¸­à¸š </label>
                         <select className="w-full border border-amber-200 rounded-2xl px-3 py-3 text-sm bg-amber-50/30 text-amber-900 outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all cursor-pointer font-medium" value={selectedRespStation} onChange={e => setSelectedRespStation(e.target.value)}>
-                            <option value="All"> ทั้งหมด </option>
+                            <option value="All"> à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” </option>
                             {respStationOptions.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                     </div>
 
                     <div className="col-span-2 lg:col-span-2">
-                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block"> สถานะติดตามงาน </label>
+                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block"> à¸ªà¸–à¸²à¸™à¸°à¸•à¸´à¸”à¸•à¸²à¸¡à¸‡à¸²à¸™ </label>
                         <select
                             className={`w-full rounded-2xl px-3 py-3 text-sm outline-none transition-all font-bold cursor-pointer border ${selectedStatus === 'All' ? 'bg-white/80 border-slate-200 text-slate-600' : getStatusColorClass(selectedStatus)}`}
                             value={selectedStatus}
                             onChange={e => setSelectedStatus(e.target.value)}
                         >
-                            <option value="All" className="bg-white text-slate-700"> ทั้งหมด </option>
+                            <option value="All" className="bg-white text-slate-700"> à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” </option>
                             {statusOptions.map(s => <option key={s} value={s} className="bg-white text-slate-700">{s}</option>)}
                         </select>
                     </div>
@@ -1111,23 +1123,23 @@ const runDashboard = () => {
                 <div className="flex flex-col md:flex-row items-start md:items-end gap-5 mt-6 pt-6 border-t border-slate-100/50">
                     <div className="flex gap-3 items-center w-full md:w-auto">
                         <div className="flex-1 md:flex-none">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block"> เริ่มต้น </label>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block"> à¹€à¸£à¸´à¹ˆà¸¡à¸•à¹‰à¸™ </label>
                             <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full md:w-40 px-3 py-2 bg-white/50 border border-slate-200 rounded-xl text-xs outline-none text-slate-600 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all" />
                         </div>
                         <div className="mt-5 text-slate-200 font-bold hidden md:block"> / </div>
                         <div className="flex-1 md:flex-none">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block"> สิ้นสุด </label>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block"> à¸ªà¸´à¹‰à¸™à¸ªà¸¸à¸” </label>
                             <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} min={startDate} className="w-full md:w-40 px-3 py-2 bg-white/50 border border-slate-200 rounded-xl text-xs outline-none text-slate-600 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all" />
                         </div>
                     </div>
                     <div className="flex gap-3 items-center w-full md:w-auto">
                         <div className="flex-1 md:flex-none">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block"> เวลาเริ่ม </label>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block"> à¹€à¸§à¸¥à¸²à¹€à¸£à¸´à¹ˆà¸¡ </label>
                             <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="w-full md:w-32 px-3 py-2 bg-white/50 border border-slate-200 rounded-xl text-xs outline-none text-slate-600 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all" />
                         </div>
                         <div className="mt-5 text-slate-200 font-bold hidden md:block"> / </div>
                         <div className="flex-1 md:flex-none">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block"> เวลาจบ </label>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block"> à¹€à¸§à¸¥à¸²à¸ˆà¸š </label>
                             <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="w-full md:w-32 px-3 py-2 bg-white/50 border border-slate-200 rounded-xl text-xs outline-none text-slate-600 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all" />
                         </div>
                     </div>
@@ -1138,11 +1150,11 @@ const runDashboard = () => {
                                 onClick={() => { setStartDate(""); setEndDate(""); setStartTime(""); setEndTime(""); setSelectedBranch("All"); setSelectedType("All"); setSelectedStatus("All"); setSelectedProv("All"); setSelectedRespProv("All"); setSelectedRespStation("All"); setSearchQuery(""); }}
                                 className="flex-1 md:flex-none px-4 py-2.5 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-2 border border-red-100"
                             >
-                                <Icons.Refresh size={14} /> ล้างตัวกรอง
+                                <Icons.Refresh size={14} /> à¸¥à¹‰à¸²à¸‡à¸•à¸±à¸§à¸à¸£à¸­à¸‡
                             </button>
                         )}
                         <button className="flex-1 md:flex-none px-5 py-2.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-200">
-                             ประมวลผลใหม่
+                             à¸›à¸£à¸°à¸¡à¸§à¸¥à¸œà¸¥à¹ƒà¸«à¸¡à¹ˆ
                         </button>
                     </div>
                 </div>
@@ -1156,7 +1168,7 @@ const runDashboard = () => {
                         <div className="flex items-center gap-4 self-start xl:self-auto group cursor-pointer">
                             <div className="bg-gradient-to-br from-yellow-400 to-amber-600 text-slate-900 p-2.5 rounded-2xl shadow-lg shadow-yellow-500/20 group-hover:scale-110 transition-transform duration-300 ring-4 ring-yellow-500/10"> <Icons.Shield size={28} /></div>
                             <div>
-                                <h1 className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-200 leading-none tracking-tight"> ระบบติดตามงาน ภ.8 </h1>
+                                <h1 className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-200 leading-none tracking-tight"> à¸£à¸°à¸šà¸šà¸•à¸´à¸”à¸•à¸²à¸¡à¸‡à¸²à¸™ à¸ .8 </h1>
                                 <p className="text-[10px] text-slate-400 mt-1.5 uppercase font-black tracking-[0.2em] opacity-80"> Financial Crime Intelligence Unit </p>
                             </div>
                         </div>
@@ -1202,17 +1214,17 @@ const runDashboard = () => {
                     {isFetchingDB && data.length === 0 && (
                         <div className="flex flex-col items-center justify-center flex-1 animate-in fade-in duration-300">
                             <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-                            <div className="text-slate-700 font-bold text-lg"> กำลังโหลดข้อมูล...</div>
+                            <div className="text-slate-700 font-bold text-lg"> à¸à¸³à¸¥à¸±à¸‡à¹‚à¸«à¸¥à¸”à¸‚à¹‰à¸­à¸¡à¸¹à¸¥...</div>
                         </div>
                     )}
 
                     {dbErrorMsg && !isFetchingDB && data.length === 0 && (
                         <div className="flex flex-col items-center justify-center flex-1 animate-in slide-in-from-bottom-4 duration-300 max-w-2xl mx-auto text-center">
                             <div className="bg-red-100 text-red-500 p-4 rounded-full mb-4"> <Icons.AlertTriangle size={48} /></div>
-                            <h2 className="text-2xl font-bold text-slate-800 mb-2"> ไม่สามารถดึงข้อมูลได้ </h2>
-                            <p className="text-slate-600 mb-6"> สาเหตุ: <span className="font-mono text-red-600 bg-red-50 px-2 py-1 rounded"> {dbErrorMsg} </span></p>
+                            <h2 className="text-2xl font-bold text-slate-800 mb-2"> à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸”à¸¶à¸‡à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¹„à¸”à¹‰ </h2>
+                            <p className="text-slate-600 mb-6"> à¸ªà¸²à¹€à¸«à¸•à¸¸: <span className="font-mono text-red-600 bg-red-50 px-2 py-1 rounded"> {dbErrorMsg} </span></p>
                             <button onClick={fetchDataFromDB} className="mt-6 flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow-lg">
-                                <Icons.Refresh size={18}/> ลองดึงข้อมูลอีกครั้ง
+                                <Icons.Refresh size={18}/> à¸¥à¸­à¸‡à¸”à¸¶à¸‡à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸­à¸µà¸à¸„à¸£à¸±à¹‰à¸‡
                             </button>
                         </div>
                     )}
@@ -1225,17 +1237,17 @@ const runDashboard = () => {
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6 animate-fade-slide-up" style={{ animationDelay: '0.1s' }}>
                                         <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col justify-center relative overflow-hidden hover-lift">
                                             <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-300 rounded-l-2xl"></div>
-                                            <div className="text-xs text-slate-500 font-medium mb-1 ml-3"> ยอดความเสียหายรวม </div>
+                                            <div className="text-xs text-slate-500 font-medium mb-1 ml-3"> à¸¢à¸­à¸”à¸„à¸§à¸²à¸¡à¹€à¸ªà¸µà¸¢à¸«à¸²à¸¢à¸£à¸§à¸¡ </div>
                                             <div className="text-2xl xl:text-3xl font-bold text-slate-800 ml-3 truncate" title={formatMoney(totalAmount)}> {formatMoney(totalAmount)} </div>
                                         </div>
                                         <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col justify-center relative overflow-hidden hover-lift">
                                             <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-300 rounded-l-2xl"></div>
-                                            <div className="text-xs text-slate-500 font-medium mb-1 ml-3"> จำนวนคดี(Tracking Code) </div>
+                                            <div className="text-xs text-slate-500 font-medium mb-1 ml-3"> à¸ˆà¸³à¸™à¸§à¸™à¸„à¸”à¸µ(Tracking Code) </div>
                                             <div className="text-3xl font-bold text-slate-800 ml-3"> {totalCases} </div>
                                         </div>
                                         <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col justify-center relative overflow-hidden hover-lift">
                                             <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-300 rounded-l-2xl"></div>
-                                            <div className="text-xs text-slate-500 font-medium mb-1 ml-3"> การถอน - กดเงิน(ครั้ง) </div>
+                                            <div className="text-xs text-slate-500 font-medium mb-1 ml-3"> à¸à¸²à¸£à¸–à¸­à¸™ - à¸à¸”à¹€à¸‡à¸´à¸™(à¸„à¸£à¸±à¹‰à¸‡) </div>
                                             <div className="text-3xl font-bold text-slate-800 ml-3"> {totalTransactions} </div>
                                         </div>
                                         <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col justify-center relative overflow-hidden hover-lift">
@@ -1251,9 +1263,9 @@ const runDashboard = () => {
                                         <div className="flex justify-between items-center mb-6">
                                             <div className="flex items-center gap-2">
                                                 <Icons.Clock size={18} className="text-slate-700" />
-                                                <h3 className="text-[14px] font-bold text-slate-800"> ช่วงเวลาเกิดเหตุ(Time Analysis) </h3>
+                                                <h3 className="text-[14px] font-bold text-slate-800"> à¸Šà¹ˆà¸§à¸‡à¹€à¸§à¸¥à¸²à¹€à¸à¸´à¸”à¹€à¸«à¸•à¸¸(Time Analysis) </h3>
                                             </div>
-                                            <ChartToggle options={['การถอน', 'ยอดเงิน']} active={timeMode} onChange={setTimeMode} />
+                                            <ChartToggle options={['à¸à¸²à¸£à¸–à¸­à¸™', 'à¸¢à¸­à¸”à¹€à¸‡à¸´à¸™']} active={timeMode} onChange={setTimeMode} />
                                         </div>
                                         <div className="w-full h-[250px] md:h-[300px]">
                                             <ResponsiveContainer width="100%" height="100%">
@@ -1262,7 +1274,7 @@ const runDashboard = () => {
                                                     <XAxis dataKey="hour" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={{ stroke: '#cbd5e1' }} tickLine={false} />
                                                     <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
                                                     <Tooltip content={<ChartTooltip />} cursor={{ fill: '#f1f5f9' }} />
-                                                    <Bar dataKey={timeMode === 'ยอดเงิน' ? 'amount' : 'count'} fill="#f97316" radius={[4, 4, 0, 0]} onClick={(d) => handleBarClick(d, 'time')} />
+                                                    <Bar dataKey={timeMode === 'à¸¢à¸­à¸”à¹€à¸‡à¸´à¸™' ? 'amount' : 'count'} fill="#f97316" radius={[4, 4, 0, 0]} onClick={(d) => handleBarClick(d, 'time')} />
                                                 </BarChart>
                                             </ResponsiveContainer>
                                         </div>
@@ -1271,8 +1283,8 @@ const runDashboard = () => {
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 animate-fade-slide-up w-full" style={{ animationDelay: '0.3s' }}>
                                         <div className="col-span-1 bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col w-full">
                                             <div className="flex justify-between items-center mb-4">
-                                                <h3 className="text-[14px] font-bold text-slate-800"> ธนาคาร(Top Banks) </h3>
-                                                <ChartToggle options={['การถอน', 'ยอดเงิน']} active={bankMode} onChange={setBankMode} />
+                                                <h3 className="text-[14px] font-bold text-slate-800"> à¸˜à¸™à¸²à¸„à¸²à¸£(Top Banks) </h3>
+                                                <ChartToggle options={['à¸à¸²à¸£à¸–à¸­à¸™', 'à¸¢à¸­à¸”à¹€à¸‡à¸´à¸™']} active={bankMode} onChange={setBankMode} />
                                             </div>
                                             <div className="w-full h-[250px]">
                                                 <ResponsiveContainer width="100%" height="100%">
@@ -1280,7 +1292,7 @@ const runDashboard = () => {
                                                         <XAxis type="number" hide />
                                                         <YAxis type="category" dataKey="name" width={40} tick={{ fontSize: 10, fill: '#64748b' }} axisLine={{ stroke: '#cbd5e1' }} tickLine={false} />
                                                         <Tooltip content={<ChartTooltip />} cursor={{ fill: '#f1f5f9' }} />
-                                                        <Bar dataKey={bankMode === 'ยอดเงิน' ? 'amount' : 'count'} barSize={16} radius={[0, 4, 4, 0]} onClick={(d) => handleBarClick(d, 'bank')}>
+                                                        <Bar dataKey={bankMode === 'à¸¢à¸­à¸”à¹€à¸‡à¸´à¸™' ? 'amount' : 'count'} barSize={16} radius={[0, 4, 4, 0]} onClick={(d) => handleBarClick(d, 'bank')}>
                                                             {sortedBankStats.map((entry, index) => (<Cell key={`cell-${index}`} fill={BANK_COLORS[entry.name] || '#94a3b8'} />))}
                                                         </Bar>
                                                     </BarChart>
@@ -1289,8 +1301,8 @@ const runDashboard = () => {
                                         </div>
                                         <div className="col-span-1 bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col w-full">
                                             <div className="flex justify-between items-center mb-4">
-                                                <h3 className="text-[14px] font-bold text-slate-800"> รูปแบบการถอนเงิน </h3>
-                                                <ChartToggle options={['การถอน', 'ยอดเงิน']} active={typeMode} onChange={setTypeMode} />
+                                                <h3 className="text-[14px] font-bold text-slate-800"> à¸£à¸¹à¸›à¹à¸šà¸šà¸à¸²à¸£à¸–à¸­à¸™à¹€à¸‡à¸´à¸™ </h3>
+                                                <ChartToggle options={['à¸à¸²à¸£à¸–à¸­à¸™', 'à¸¢à¸­à¸”à¹€à¸‡à¸´à¸™']} active={typeMode} onChange={setTypeMode} />
                                             </div>
                                             <div className="w-full h-[250px]">
                                                 <ResponsiveContainer width="100%" height="100%">
@@ -1299,15 +1311,15 @@ const runDashboard = () => {
                                                         <XAxis type="number" hide />
                                                         <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 10, fill: '#64748b' }} axisLine={{ stroke: '#cbd5e1' }} tickLine={false} />
                                                         <Tooltip content={<ChartTooltip />} cursor={{ fill: '#f1f5f9' }} />
-                                                        <Bar dataKey={typeMode === 'ยอดเงิน' ? 'amount' : 'count'} fill="#8b5cf6" barSize={18} radius={[0, 4, 4, 0]} onClick={(d) => handleBarClick(d, 'type')} />
+                                                        <Bar dataKey={typeMode === 'à¸¢à¸­à¸”à¹€à¸‡à¸´à¸™' ? 'amount' : 'count'} fill="#8b5cf6" barSize={18} radius={[0, 4, 4, 0]} onClick={(d) => handleBarClick(d, 'type')} />
                                                     </BarChart>
                                                 </ResponsiveContainer>
                                             </div>
                                         </div>
                                         <div className="col-span-1 bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col w-full">
                                             <div className="flex justify-between items-center mb-4">
-                                                <h3 className="text-[14px] font-bold text-slate-800"> แยกตามหน่วยงาน </h3>
-                                                <ChartToggle options={['การถอน', 'ยอดเงิน']} active={unitMode} onChange={setUnitMode} />
+                                                <h3 className="text-[14px] font-bold text-slate-800"> à¹à¸¢à¸à¸•à¸²à¸¡à¸«à¸™à¹ˆà¸§à¸¢à¸‡à¸²à¸™ </h3>
+                                                <ChartToggle options={['à¸à¸²à¸£à¸–à¸­à¸™', 'à¸¢à¸­à¸”à¹€à¸‡à¸´à¸™']} active={unitMode} onChange={setUnitMode} />
                                             </div>
                                             <div className="w-full h-[250px]">
                                                 <ResponsiveContainer width="100%" height="100%">
@@ -1315,7 +1327,7 @@ const runDashboard = () => {
                                                         <XAxis type="number" hide />
                                                         <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 10, fill: '#64748b' }} axisLine={{ stroke: '#cbd5e1' }} tickLine={false} />
                                                         <Tooltip content={<ChartTooltip />} cursor={{ fill: '#f1f5f9' }} />
-                                                        <Bar dataKey={unitMode === 'ยอดเงิน' ? 'amount' : 'count'} fill="#3b82f6" barSize={12} radius={[0, 4, 4, 0]} onClick={(d) => handleBarClick(d, 'unit')} />
+                                                        <Bar dataKey={unitMode === 'à¸¢à¸­à¸”à¹€à¸‡à¸´à¸™' ? 'amount' : 'count'} fill="#3b82f6" barSize={12} radius={[0, 4, 4, 0]} onClick={(d) => handleBarClick(d, 'unit')} />
                                                     </BarChart>
                                                 </ResponsiveContainer>
                                             </div>
@@ -1325,12 +1337,12 @@ const runDashboard = () => {
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8 animate-fade-slide-up w-full" style={{ animationDelay: '0.4s' }}>
                                         <div className="col-span-1 lg:col-span-2 bg-white rounded-3xl border border-slate-200/60 shadow-xl shadow-slate-200/40 flex flex-col h-[400px] lg:h-[600px] overflow-hidden w-full transition-all">
                                             <div className="p-4 md:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                                                <h3 className="text-[14px] font-bold text-slate-800 flex items-center gap-2"> <Icons.MapPin size={16} className="text-blue-500" /> แผนที่จุดถอนเงิน(ATM / สาขา) </h3>
+                                                <h3 className="text-[14px] font-bold text-slate-800 flex items-center gap-2"> <Icons.MapPin size={16} className="text-blue-500" /> à¹à¸œà¸™à¸—à¸µà¹ˆà¸ˆà¸¸à¸”à¸–à¸­à¸™à¹€à¸‡à¸´à¸™(ATM / à¸ªà¸²à¸‚à¸²) </h3>
                                                 <div className="flex items-center gap-3 text-[10px] text-slate-500">
-                                                    <div className="flex items-center gap-1.5"> <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444] shadow-sm"> </span> สูง</div>
-                                                    <div className="flex items-center gap-1.5"> <span className="w-2.5 h-2.5 rounded-full bg-[#f97316] shadow-sm"> </span> กลาง</div>
-                                                    <div className="flex items-center gap-1.5"> <span className="w-2.5 h-2.5 rounded-full bg-[#3b82f6] shadow-sm"> </span> ปกติ</div>
-                                                    <span className="text-slate-400 ml-1 border-l pl-2 hidden sm:inline">* ขนาดจุดแปรผันตามความถี่ </span>
+                                                    <div className="flex items-center gap-1.5"> <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444] shadow-sm"> </span> à¸ªà¸¹à¸‡</div>
+                                                    <div className="flex items-center gap-1.5"> <span className="w-2.5 h-2.5 rounded-full bg-[#f97316] shadow-sm"> </span> à¸à¸¥à¸²à¸‡</div>
+                                                    <div className="flex items-center gap-1.5"> <span className="w-2.5 h-2.5 rounded-full bg-[#3b82f6] shadow-sm"> </span> à¸›à¸à¸•à¸´</div>
+                                                    <span className="text-slate-400 ml-1 border-l pl-2 hidden sm:inline">* à¸‚à¸™à¸²à¸”à¸ˆà¸¸à¸”à¹à¸›à¸£à¸œà¸±à¸™à¸•à¸²à¸¡à¸„à¸§à¸²à¸¡à¸–à¸µà¹ˆ </span>
                                                 </div>
                                             </div>
                                             <div className="flex-1 relative bg-slate-100 p-2 w-full">
@@ -1340,15 +1352,15 @@ const runDashboard = () => {
                                         <div className="col-span-1 bg-white rounded-3xl border border-slate-200/60 shadow-xl shadow-slate-200/40 h-[400px] lg:h-[600px] flex flex-col overflow-hidden w-full transition-all">
                                             <div className="p-4 md:p-5 border-b border-slate-100 flex justify-between items-center">
                                                 <h3 className="text-[14px] font-bold text-slate-800"> Top High Value / Risk </h3>
-                                                <ChartToggle options={['การถอน', 'ยอดเงิน']} active={topRiskMode} onChange={setTopRiskMode} />
+                                                <ChartToggle options={['à¸à¸²à¸£à¸–à¸­à¸™', 'à¸¢à¸­à¸”à¹€à¸‡à¸´à¸™']} active={topRiskMode} onChange={setTopRiskMode} />
                                             </div>
                                             <div className="flex-1 overflow-auto w-full">
                                                 <table className="w-full text-xs text-left min-w-[300px]">
                                                     <thead className="bg-slate-50 text-[10px] text-slate-500 sticky top-0 uppercase border-b border-slate-200 z-10 shadow-sm">
                                                         <tr>
                                                             <th className="px-4 md:px-5 py-3 font-bold whitespace-nowrap"> LOCATION </th>
-                                                            <th className="px-2 py-3 font-bold text-center whitespace-nowrap"> ความถี่ </th>
-                                                            <th className="px-4 md:px-5 py-3 font-bold text-right whitespace-nowrap"> ยอดรวม </th>
+                                                            <th className="px-2 py-3 font-bold text-center whitespace-nowrap"> à¸„à¸§à¸²à¸¡à¸–à¸µà¹ˆ </th>
+                                                            <th className="px-4 md:px-5 py-3 font-bold text-right whitespace-nowrap"> à¸¢à¸­à¸”à¸£à¸§à¸¡ </th>
                                                         </tr>
                                                     </thead>
                                                     <tbody className="divide-y divide-slate-100">
@@ -1361,7 +1373,7 @@ const runDashboard = () => {
                                                                             <button 
                                                                                 onClick={() => setMapFocus({ lat: stat.lat, lon: stat.lon, id: stat.location })}
                                                                                 className="p-1 hover:bg-blue-100 rounded text-blue-500 hover:text-blue-700 transition-colors"
-                                                                                title="ดูบนแผนที่"
+                                                                                title="à¸”à¸¹à¸šà¸™à¹à¸œà¸™à¸—à¸µà¹ˆ"
                                                                             >
                                                                                 <Icons.MapIcon size={14} className="flex-shrink-0" />
                                                                             </button>
@@ -1412,7 +1424,7 @@ const runDashboard = () => {
                                             <div className="flex items-center gap-4">
                                                 <div className="p-3 bg-indigo-500/10 rounded-2xl text-indigo-600 shadow-inner ring-1 ring-indigo-100"> <Icons.Users size={22} /></div>
                                                 <div>
-                                                    <h3 className="font-black text-slate-800 text-base tracking-tight"> รายการบัญชีม้า (Mule Accounts) </h3>
+                                                    <h3 className="font-black text-slate-800 text-base tracking-tight"> à¸£à¸²à¸¢à¸à¸²à¸£à¸šà¸±à¸à¸Šà¸µà¸¡à¹‰à¸² (Mule Accounts) </h3>
                                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5"> Detailed analytics of identified mule accounts </p>
                                                 </div>
                                             </div>
@@ -1420,7 +1432,7 @@ const runDashboard = () => {
                                                 <Icons.Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={16} />
                                                 <input 
                                                     type="text" 
-                                                    placeholder="ค้นหาชื่อ, เลขบัญชี หรือ ธนาคาร..." 
+                                                    placeholder="à¸„à¹‰à¸™à¸«à¸²à¸Šà¸·à¹ˆà¸­, à¹€à¸¥à¸‚à¸šà¸±à¸à¸Šà¸µ à¸«à¸£à¸·à¸­ à¸˜à¸™à¸²à¸„à¸²à¸£..." 
                                                     className="pl-12 pr-4 py-3 bg-slate-100 border-none rounded-2xl text-[12px] font-bold w-full outline-none focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all shadow-inner placeholder-slate-400" 
                                                     value={muleSearch} 
                                                     onChange={e => setMuleSearch(e.target.value)} 
@@ -1432,11 +1444,11 @@ const runDashboard = () => {
                                                 <thead className="bg-slate-50/80 backdrop-blur-sm text-[11px] text-slate-500 font-black sticky top-0 shadow-sm z-[20] border-b border-slate-200 uppercase tracking-widest">
                                                     <tr>
                                                         <th className="px-6 py-5 text-center w-16">#</th>
-                                                        <th className="px-6 py-5"> ชื่อบัญชี </th>
-                                                        <th className="px-6 py-5"> เลขที่บัญชี </th>
-                                                        <th className="px-6 py-5 text-center"> สถาบันการเงิน </th>
-                                                        <th className="px-6 py-5 text-center"> ความถี่การโอน </th>
-                                                        <th className="px-6 py-5 text-right"> ยอดรวมทั้งสิ้น </th>
+                                                        <th className="px-6 py-5"> à¸Šà¸·à¹ˆà¸­à¸šà¸±à¸à¸Šà¸µ </th>
+                                                        <th className="px-6 py-5"> à¹€à¸¥à¸‚à¸—à¸µà¹ˆà¸šà¸±à¸à¸Šà¸µ </th>
+                                                        <th className="px-6 py-5 text-center"> à¸ªà¸–à¸²à¸šà¸±à¸™à¸à¸²à¸£à¹€à¸‡à¸´à¸™ </th>
+                                                        <th className="px-6 py-5 text-center"> à¸„à¸§à¸²à¸¡à¸–à¸µà¹ˆà¸à¸²à¸£à¹‚à¸­à¸™ </th>
+                                                        <th className="px-6 py-5 text-right"> à¸¢à¸­à¸”à¸£à¸§à¸¡à¸—à¸±à¹‰à¸‡à¸ªà¸´à¹‰à¸™ </th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-100/80">
@@ -1453,7 +1465,7 @@ const runDashboard = () => {
                                                                 <span className="px-3 py-1 rounded-lg text-[10px] font-black text-white shadow-sm ring-2 ring-white/20 whitespace-nowrap" style={{ backgroundColor: BANK_COLORS[mule.bank] || '#94a3b8' }}> {mule.bank} </span>
                                                             </td>
                                                             <td className="px-6 py-5 text-center font-black text-slate-800 tabular-nums"> {mule.count} </td>
-                                                            <td className="px-6 py-5 text-right font-black text-slate-800 tabular-nums group-hover:text-indigo-600"> {formatMoney(mule.amount)} <span className="text-[10px] font-bold text-slate-400 ml-1">฿</span></td>
+                                                            <td className="px-6 py-5 text-right font-black text-slate-800 tabular-nums group-hover:text-indigo-600"> {formatMoney(mule.amount)} <span className="text-[10px] font-bold text-slate-400 ml-1">à¸¿</span></td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -1463,7 +1475,7 @@ const runDashboard = () => {
                                 </div>
                             )}
 
-                            {/* แท็บ Task Tracker (เพิ่มการล็อกสถานะและแสดงเวลาอัปเดตแล้ว) */}
+                            {/* à¹à¸—à¹‡à¸š Task Tracker (à¹€à¸žà¸´à¹ˆà¸¡à¸à¸²à¸£à¸¥à¹‡à¸­à¸à¸ªà¸–à¸²à¸™à¸°à¹à¸¥à¸°à¹à¸ªà¸”à¸‡à¹€à¸§à¸¥à¸²à¸­à¸±à¸›à¹€à¸”à¸•à¹à¸¥à¹‰à¸§) */}
                             {activeTab === 'tracker' && (
                                 <div className="animate-fade-slide-up w-full">
                                     {renderFilterBar()}
@@ -1475,9 +1487,9 @@ const runDashboard = () => {
                                         <div className="flex-1 w-full">
                                             <div className="flex items-center gap-2 mb-1">
                                                 <Icons.Flag size={18} className="text-blue-600"/>
-                                                <h3 className="font-bold text-slate-800 text-[15px]">ภาพรวมความคืบหน้าการทำงาน</h3>
+                                                <h3 className="font-bold text-slate-800 text-[15px]">à¸ à¸²à¸žà¸£à¸§à¸¡à¸„à¸§à¸²à¸¡à¸„à¸·à¸šà¸«à¸™à¹‰à¸²à¸à¸²à¸£à¸—à¸³à¸‡à¸²à¸™</h3>
                                             </div>
-                                            <p className="text-[11px] text-slate-500 mb-6">คำนวณจากสัดส่วนคดีที่ "ส่งคืนต้นสังกัด/จัดทำรายงานแล้ว" เทียบกับคดีทั้งหมด</p>
+                                            <p className="text-[11px] text-slate-500 mb-6">à¸„à¸³à¸™à¸§à¸“à¸ˆà¸²à¸à¸ªà¸±à¸”à¸ªà¹ˆà¸§à¸™à¸„à¸”à¸µà¸—à¸µà¹ˆ "à¸ªà¹ˆà¸‡à¸„à¸·à¸™à¸•à¹‰à¸™à¸ªà¸±à¸‡à¸à¸±à¸”/à¸ˆà¸±à¸”à¸—à¸³à¸£à¸²à¸¢à¸‡à¸²à¸™à¹à¸¥à¹‰à¸§" à¹€à¸—à¸µà¸¢à¸šà¸à¸±à¸šà¸„à¸”à¸µà¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”</p>
                                             <div className="relative h-12 w-full border border-dashed border-slate-300 rounded-full bg-slate-50/50 flex items-center px-2">
                                                 <div 
                                                     className="absolute w-10 h-10 bg-blue-500 rounded-xl shadow-md flex items-center justify-center text-white z-10 transition-all duration-1000 ease-out"
@@ -1487,33 +1499,33 @@ const runDashboard = () => {
                                                 </div>
                                                 <div className="absolute right-6 top-0 bottom-0 border-l-2 border-dashed border-green-500"></div>
                                                 <div className="absolute right-4 -top-6 text-green-500"><Icons.Flag size={24} /></div>
-                                                <div className="absolute -bottom-6 left-2 text-[10px] font-bold text-slate-500">เริ่มต้น</div>
-                                                <div className="absolute -bottom-6 right-2 text-[10px] font-bold text-green-600">เส้นชัย (100%)</div>
+                                                <div className="absolute -bottom-6 left-2 text-[10px] font-bold text-slate-500">à¹€à¸£à¸´à¹ˆà¸¡à¸•à¹‰à¸™</div>
+                                                <div className="absolute -bottom-6 right-2 text-[10px] font-bold text-green-600">à¹€à¸ªà¹‰à¸™à¸Šà¸±à¸¢ (100%)</div>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-5 mb-6 w-full">
-                                        <StatusCard title="คดีทั้งหมด" count={totalTransactions} colorHex="#3b82f6" icon={<Icons.Archive size={14}/>} onClick={() => handleCardClick("รอรับเรื่อง")} />
-                                        <StatusCard title="รอรับเรื่อง" count={trackerStats["รอรับเรื่อง"]} colorHex="#f59e0b" icon={<Icons.Loader size={14}/>} onClick={() => handleCardClick("รอรับเรื่อง")} />
-                                        <StatusCard title="อยู่ระหว่างสืบสวน" count={trackerStats["อยู่ระหว่างสืบสวน"]} colorHex="#8b5cf6" icon={<Icons.SearchStatus size={14}/>} onClick={() => handleCardClick("อยู่ระหว่างสืบสวน")} />
-                                        <StatusCard title="จัดทำรายงานสืบแล้ว" count={trackerStats["จัดทำรายงานสืบแล้ว"]} colorHex="#0ea5e9" icon={<Icons.FileText size={14}/>} onClick={() => handleCardClick("จัดทำรายงานสืบแล้ว")} />
-                                        <StatusCard title="ส่งคืนต้นสังกัดแล้ว" count={trackerStats["ส่งคืนต้นสังกัดแล้ว"]} colorHex="#10b981" icon={<Icons.ExternalLink size={14}/>} onClick={() => handleCardClick("ส่งคืนต้นสังกัดแล้ว")} />
-                                        <StatusCard title="ไม่พบ/ยกเลิก" count={trackerStats["ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก..."]} colorHex="#ef4444" icon={<Icons.AlertTriangle size={14}/>} onClick={() => handleCardClick("ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก...")} />
+                                        <StatusCard title="à¸„à¸”à¸µà¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”" count={totalTransactions} colorHex="#3b82f6" icon={<Icons.Archive size={14}/>} onClick={() => handleCardClick("à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡")} />
+                                        <StatusCard title="à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡" count={trackerStats["à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡"]} colorHex="#f59e0b" icon={<Icons.Loader size={14}/>} onClick={() => handleCardClick("à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡")} />
+                                        <StatusCard title="à¸­à¸¢à¸¹à¹ˆà¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡à¸ªà¸·à¸šà¸ªà¸§à¸™" count={trackerStats["à¸­à¸¢à¸¹à¹ˆà¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡à¸ªà¸·à¸šà¸ªà¸§à¸™"]} colorHex="#8b5cf6" icon={<Icons.SearchStatus size={14}/>} onClick={() => handleCardClick("à¸­à¸¢à¸¹à¹ˆà¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡à¸ªà¸·à¸šà¸ªà¸§à¸™")} />
+                                        <StatusCard title="à¸ˆà¸±à¸”à¸—à¸³à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸·à¸šà¹à¸¥à¹‰à¸§" count={trackerStats["à¸ˆà¸±à¸”à¸—à¸³à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸·à¸šà¹à¸¥à¹‰à¸§"]} colorHex="#0ea5e9" icon={<Icons.FileText size={14}/>} onClick={() => handleCardClick("à¸ˆà¸±à¸”à¸—à¸³à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸·à¸šà¹à¸¥à¹‰à¸§")} />
+                                        <StatusCard title="à¸ªà¹ˆà¸‡à¸„à¸·à¸™à¸•à¹‰à¸™à¸ªà¸±à¸‡à¸à¸±à¸”à¹à¸¥à¹‰à¸§" count={trackerStats["à¸ªà¹ˆà¸‡à¸„à¸·à¸™à¸•à¹‰à¸™à¸ªà¸±à¸‡à¸à¸±à¸”à¹à¸¥à¹‰à¸§"]} colorHex="#10b981" icon={<Icons.ExternalLink size={14}/>} onClick={() => handleCardClick("à¸ªà¹ˆà¸‡à¸„à¸·à¸™à¸•à¹‰à¸™à¸ªà¸±à¸‡à¸à¸±à¸”à¹à¸¥à¹‰à¸§")} />
+                                        <StatusCard title="à¹„à¸¡à¹ˆà¸žà¸š/à¸¢à¸à¹€à¸¥à¸´à¸" count={trackerStats["à¹„à¸¡à¹ˆà¸žà¸š/à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸”à¸³à¹€à¸™à¸´à¸™à¸à¸²à¸£à¹„à¸”à¹‰à¹€à¸™à¸·à¹ˆà¸­à¸‡à¸ˆà¸²à¸..."]} colorHex="#ef4444" icon={<Icons.AlertTriangle size={14}/>} onClick={() => handleCardClick("à¹„à¸¡à¹ˆà¸žà¸š/à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸”à¸³à¹€à¸™à¸´à¸™à¸à¸²à¸£à¹„à¸”à¹‰à¹€à¸™à¸·à¹ˆà¸­à¸‡à¸ˆà¸²à¸...")} />
                                     </div>
 
                                     <div className="bg-white p-4 md:p-6 rounded-2xl border border-slate-200/60 shadow-sm mb-6 flex flex-col w-full">
                                         <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center mb-6 gap-3">
                                             <h3 className="text-[14px] font-bold text-slate-800 flex items-center gap-2">
                                                 <Icons.Activity size={18} className="text-indigo-500 shrink-0" />
-                                                สถานะงานแยกตามจังหวัด(คลิกแท่งกราฟเพื่อดูคดี)
+                                                à¸ªà¸–à¸²à¸™à¸°à¸‡à¸²à¸™à¹à¸¢à¸à¸•à¸²à¸¡à¸ˆà¸±à¸‡à¸«à¸§à¸±à¸”(à¸„à¸¥à¸´à¸à¹à¸—à¹ˆà¸‡à¸à¸£à¸²à¸Ÿà¹€à¸žà¸·à¹ˆà¸­à¸”à¸¹à¸„à¸”à¸µ)
                                             </h3>
                                             <div className="flex flex-wrap items-center gap-2 md:gap-4 text-[10px] md:text-[11px] font-medium bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                                                <span className="flex items-center gap-1.5"> <div className="w-2.5 h-2.5 rounded bg-[#f59e0b]"></div> รอรับเรื่อง</span>
-                                                <span className="flex items-center gap-1.5"> <div className="w-2.5 h-2.5 rounded bg-[#8b5cf6]"></div> สืบสวน</span>
-                                                <span className="flex items-center gap-1.5"> <div className="w-2.5 h-2.5 rounded bg-[#0ea5e9]"></div> รายงานแล้ว</span>
-                                                <span className="flex items-center gap-1.5"> <div className="w-2.5 h-2.5 rounded bg-[#10b981]"></div> ส่งคืน</span>
-                                                <span className="flex items-center gap-1.5"> <div className="w-2.5 h-2.5 rounded bg-[#ef4444]"></div> ไม่พบ/ยกเลิก</span>
+                                                <span className="flex items-center gap-1.5"> <div className="w-2.5 h-2.5 rounded bg-[#f59e0b]"></div> à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡</span>
+                                                <span className="flex items-center gap-1.5"> <div className="w-2.5 h-2.5 rounded bg-[#8b5cf6]"></div> à¸ªà¸·à¸šà¸ªà¸§à¸™</span>
+                                                <span className="flex items-center gap-1.5"> <div className="w-2.5 h-2.5 rounded bg-[#0ea5e9]"></div> à¸£à¸²à¸¢à¸‡à¸²à¸™à¹à¸¥à¹‰à¸§</span>
+                                                <span className="flex items-center gap-1.5"> <div className="w-2.5 h-2.5 rounded bg-[#10b981]"></div> à¸ªà¹ˆà¸‡à¸„à¸·à¸™</span>
+                                                <span className="flex items-center gap-1.5"> <div className="w-2.5 h-2.5 rounded bg-[#ef4444]"></div> à¹„à¸¡à¹ˆà¸žà¸š/à¸¢à¸à¹€à¸¥à¸´à¸</span>
                                             </div>
                                         </div>
                                         <div className="w-full h-[300px] md:h-[400px]">
@@ -1523,11 +1535,11 @@ const runDashboard = () => {
                                                     <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b', fontWeight: 'bold' }} axisLine={{ stroke: '#cbd5e1' }} tickLine={false} />
                                                     <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} allowDecimals={false} />
                                                     <Tooltip content={<TaskChartTooltip />} cursor={{ fill: '#f1f5f9' }} />
-                                                    <Bar dataKey="รอรับเรื่อง" stackId="a" fill="#f59e0b" onClick={(d) => handleBarClick(d, 'task-prov', 'รอรับเรื่อง')} style={{ cursor: 'pointer' }} />
-                                                    <Bar dataKey="อยู่ระหว่างสืบสวน" stackId="a" fill="#8b5cf6" onClick={(d) => handleBarClick(d, 'task-prov', 'อยู่ระหว่างสืบสวน')} style={{ cursor: 'pointer' }} />
-                                                    <Bar dataKey="จัดทำรายงานสืบแล้ว" stackId="a" fill="#0ea5e9" onClick={(d) => handleBarClick(d, 'task-prov', 'จัดทำรายงานสืบแล้ว')} style={{ cursor: 'pointer' }} />
-                                                    <Bar dataKey="ส่งคืนต้นสังกัดแล้ว" stackId="a" fill="#10b981" onClick={(d) => handleBarClick(d, 'task-prov', 'ส่งคืนต้นสังกัดแล้ว')} style={{ cursor: 'pointer' }} />
-                                                    <Bar dataKey="ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก..." stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} onClick={(d) => handleBarClick(d, 'task-prov', 'ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก...')} style={{ cursor: 'pointer' }} />
+                                                    <Bar dataKey="à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡" stackId="a" fill="#f59e0b" onClick={(d) => handleBarClick(d, 'task-prov', 'à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡')} style={{ cursor: 'pointer' }} />
+                                                    <Bar dataKey="à¸­à¸¢à¸¹à¹ˆà¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡à¸ªà¸·à¸šà¸ªà¸§à¸™" stackId="a" fill="#8b5cf6" onClick={(d) => handleBarClick(d, 'task-prov', 'à¸­à¸¢à¸¹à¹ˆà¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡à¸ªà¸·à¸šà¸ªà¸§à¸™')} style={{ cursor: 'pointer' }} />
+                                                    <Bar dataKey="à¸ˆà¸±à¸”à¸—à¸³à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸·à¸šà¹à¸¥à¹‰à¸§" stackId="a" fill="#0ea5e9" onClick={(d) => handleBarClick(d, 'task-prov', 'à¸ˆà¸±à¸”à¸—à¸³à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸·à¸šà¹à¸¥à¹‰à¸§')} style={{ cursor: 'pointer' }} />
+                                                    <Bar dataKey="à¸ªà¹ˆà¸‡à¸„à¸·à¸™à¸•à¹‰à¸™à¸ªà¸±à¸‡à¸à¸±à¸”à¹à¸¥à¹‰à¸§" stackId="a" fill="#10b981" onClick={(d) => handleBarClick(d, 'task-prov', 'à¸ªà¹ˆà¸‡à¸„à¸·à¸™à¸•à¹‰à¸™à¸ªà¸±à¸‡à¸à¸±à¸”à¹à¸¥à¹‰à¸§')} style={{ cursor: 'pointer' }} />
+                                                    <Bar dataKey="à¹„à¸¡à¹ˆà¸žà¸š/à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸”à¸³à¹€à¸™à¸´à¸™à¸à¸²à¸£à¹„à¸”à¹‰à¹€à¸™à¸·à¹ˆà¸­à¸‡à¸ˆà¸²à¸..." stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} onClick={(d) => handleBarClick(d, 'task-prov', 'à¹„à¸¡à¹ˆà¸žà¸š/à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸”à¸³à¹€à¸™à¸´à¸™à¸à¸²à¸£à¹„à¸”à¹‰à¹€à¸™à¸·à¹ˆà¸­à¸‡à¸ˆà¸²à¸...')} style={{ cursor: 'pointer' }} />
                                                 </BarChart>
                                             </ResponsiveContainer>
                                         </div>
@@ -1538,7 +1550,7 @@ const runDashboard = () => {
                                             <div className="flex items-center gap-4">
                                                 <div className="p-3 bg-indigo-500/10 rounded-2xl text-indigo-600 shadow-inner ring-1 ring-indigo-100"> <Icons.ClipboardList size={22} /></div>
                                                 <div>
-                                                    <h3 className="font-black text-slate-800 text-base tracking-tight"> รายการที่ต้องติดตาม </h3>
+                                                    <h3 className="font-black text-slate-800 text-base tracking-tight"> à¸£à¸²à¸¢à¸à¸²à¸£à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸•à¸´à¸”à¸•à¸²à¸¡ </h3>
                                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5"> Real-time tracking from Google Sheets </p>
                                                 </div>
                                             </div>
@@ -1547,158 +1559,143 @@ const runDashboard = () => {
                                             <table className="w-full text-sm text-left min-w-[900px]">
                                                 <thead className="bg-slate-50/80 backdrop-blur-sm text-[11px] text-slate-500 font-black sticky top-0 shadow-sm z-[20] border-b border-slate-200 uppercase tracking-wider">
                                                     <tr>
-                                                        <th className="px-6 py-5 w-[10%]"> หน่วยงาน </th>
-                                                        <th className="px-6 py-5 w-[30%]"> ATM / BRANCH / ข้อมูลคดี </th>
-                                                        <th className="px-6 py-5 w-[15%] text-center"> สถานะงาน </th>
-                                                        <th className="px-6 py-5 w-[22%]"> รายละเอียด/หมายเหตุ </th>
-                                                        <th className="px-6 py-5 w-[23%] text-right"> ลิงก์รายงานสืบสวน </th>
+                                                        <th className="px-6 py-5 w-[10%]"> à¸«à¸™à¹ˆà¸§à¸¢à¸‡à¸²à¸™ </th>
+                                                        <th className="px-6 py-5 w-[30%]"> ATM / BRANCH / à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸„à¸”à¸µ </th>
+                                                        <th className="px-6 py-5 w-[15%] text-center"> à¸ªà¸–à¸²à¸™à¸°à¸‡à¸²à¸™ </th>
+                                                        <th className="px-6 py-5 w-[22%]"> à¸£à¸²à¸¢à¸¥à¸°à¹€à¸­à¸µà¸¢à¸”/à¸«à¸¡à¸²à¸¢à¹€à¸«à¸•à¸¸ </th>
+                                                        <th className="px-6 py-5 w-[23%] text-right"> à¸¥à¸´à¸‡à¸à¹Œà¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸·à¸šà¸ªà¸§à¸™ </th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-100/80">
                                                     {filteredData.map((row) => {
-                                                        const tInfo = taskStatus[row.id] || { status: "รอรับเรื่อง", note: "-", report_link: "", last_updated: "" };
+                                                        const tInfo = taskStatus[row.id] || { status: "à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡", note: "-", report_link: "", last_updated: "" };
                                                         const isSavingStatus = savingId === row.id && savingType === 'status';
-                                                                                <td className="px-6 py-6 align-top text-center relative">
-                                                                    <div className="inline-block relative">
-                                                                        <CustomStatusSelect 
-                                                                            value={tInfo.status}
-                                                                            isSaving={isSavingStatus}
-                                                                            onChange={(newStatus) => {
-                                                                                if (newStatus === 'จัดทำรายงานสืบแล้ว' && (!tInfo.report_link || !tInfo.report_link.startsWith('http'))) {
-                                                                                    setCustomAlert({
-                                                                                        isOpen: true,
-                                                                                        title: "ไม่สามารถเปลี่ยนสถานะได้!",
-                                                                                        message: "กรุณาระบุ 'ลิงก์รายงานสืบ' (ต้องขึ้นต้นด้วย http:// หรือ https://) ในช่องด้านขวามือให้ถูกต้องก่อนครับ"
-                                                                                    });
-                                                                                    return;
-                                                                                }
-                                                                                if (newStatus === 'ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก...' && (!tInfo.note || tInfo.note.trim() === '' || tInfo.note === '-')) {
-                                                                                    setCustomAlert({
-                                                                                        isOpen: true,
-                                                                                        title: "ไม่สามารถเปลี่ยนสถานะได้!",
-                                                                                        message: "กรุณาระบุ 'หมายเหตุ' เพื่ออธิบายสาเหตุที่ไม่พบ หรือ ไม่สามารถดำเนินการได้ ก่อนครับ"
-                                                                                    });
-                                                                                    return;
-                                                                                }
-                                                                                const now = new Date().toLocaleString('th-TH');
-                                                                                setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], status: newStatus, last_updated: now } }));
-                                                                                updateTaskInDB(row, newStatus, tInfo.note, tInfo.report_link, 'status');
-                                                                            }}
-                                                                        />
-                                                                    </div>
-                                                                </td>
+                                                        const isSavingNote = savingId === row.id && savingType === 'note';
+                                                        const isSavingLink = savingId === row.id && savingType === 'link';
 
-                                                                                <span className="font-black text-indigo-600 font-mono tracking-tighter text-[13px] inline-block px-2 py-0.5 bg-indigo-50 rounded-md"> {row.tracking_code} </span>
-                                                                                <span className="font-black text-red-600 text-[13px] tabular-nums"> {formatMoney(parseAmount(row.transfer_amount))} <span className="text-[10px] font-bold text-slate-400">฿</span></span>
-                                                                            </div>
-                                                                            <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">
-                                                                                <Icons.Clock size={10} /> {row.complaint_date} <span className="text-slate-300">|</span> {row.transfer_time}
-                                                                            </div>
-                                                                            <div className="space-y-1.5 border-t border-slate-100 pt-2.5">
-                                                                                <div className="text-[11px] text-slate-700 flex items-center gap-2 font-bold">
-                                                                                    <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 scroll-none">
-                                                                                        <Icons.Users size={10} />
-                                                                                    </div>
-                                                                                    <span className="truncate"> {row.from_account_name} </span>
-                                                                                </div>
-                                                                                <div className="text-[10px] text-slate-500 font-mono flex items-center pl-7 gap-2">
-                                                                                    {row.from_account_no}
-                                                                                    <span className="px-2 py-0.5 rounded-md text-[9px] font-black text-white shadow-sm ring-1 ring-black/5" style={{ backgroundColor: BANK_COLORS[row.from_bank_shortname] || '#94a3b8' }}>
-                                                                                        {row.from_bank_shortname}
-                                                                                    </span>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
+                                                        return (
+                                                            <tr key={row.id} className="hover:bg-indigo-50/20 transition-all duration-300 group font-sarabun">
+                                                                {/* 1. à¸«à¸™à¹ˆà¸§à¸¢à¸‡à¸²à¸™ */}
+                                                                <td className="px-6 py-6 align-top">
+                                                                    <div className="flex flex-col gap-2">
+                                                                        <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-black border border-slate-200 w-fit uppercase tracking-wider">
+                                                                            {row.atm_province ? row.atm_province : 'à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸'}
+                                                                        </span>
                                                                         {row.resp_station && row.resp_station !== '-' && (
-                                                                            <div className="flex items-center gap-2.5 bg-amber-50/50 p-2.5 rounded-xl border border-amber-100 shadow-sm transition-all group-hover:bg-amber-100 group-hover:shadow-md group-hover:shadow-amber-200/20">
-                                                                                <div className="p-1.5 bg-amber-100 rounded-lg text-amber-600">
-                                                                                    <Icons.Shield size={14} />
-                                                                                </div>
-                                                                                <div className="overflow-hidden">
-                                                                                    <div className="text-[11px] font-black text-amber-800 leading-none truncate"> {row.resp_station} </div>
-                                                                                    <div className="text-[9px] text-amber-600 font-bold uppercase tracking-wider mt-1 opacity-70"> RESPONSIBLE UNIT </div>
-                                                                                </div>
+                                                                            <div className="flex items-center gap-1.5 bg-amber-50/50 p-2 rounded-xl border border-amber-100/50 text-amber-700">
+                                                                                <Icons.Shield size={12} className="shrink-0" />
+                                                                                <span className="text-[10px] font-bold truncate leading-tight">{row.resp_station}</span>
                                                                             </div>
                                                                         )}
                                                                     </div>
                                                                 </td>
-                                                                <td className="px-4 py-3.5 align-top text-center relative pt-5">
-                                                                    <div className="mt-0.5">
+
+                                                                {/* 2. ATM / BRANCH / à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸„à¸”à¸µ */}
+                                                                <td className="px-6 py-6 align-top">
+                                                                    <div className="flex flex-col gap-2.5">
+                                                                        <div className="flex flex-wrap items-center gap-2">
+                                                                            <span className="font-black text-indigo-600 font-mono tracking-tighter text-[13px] inline-block px-2 py-0.5 bg-indigo-50 rounded-md ring-1 ring-indigo-100"> {row.tracking_code} </span>
+                                                                            <span className="font-black text-red-600 text-[13px] tabular-nums flex items-center gap-1"> 
+                                                                                {formatMoney(parseAmount(row.transfer_amount))} 
+                                                                                <span className="text-[10px] font-bold text-slate-400">à¸¿</span>
+                                                                            </span>
+                                                                        </div>
+                                                                        
+                                                                        <div className="font-bold text-slate-800 text-[13px] leading-snug line-clamp-2" title={row.atm_location}> {row.atm_location} </div>
+                                                                        
+                                                                        <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                                                            <Icons.Clock size={10} className="shrink-0" /> {row.complaint_date} <span className="text-slate-300">|</span> {row.transfer_time} à¸™.
+                                                                        </div>
+
+                                                                        <div className="space-y-1.5 border-t border-slate-100 pt-2.5 mt-0.5">
+                                                                            <div className="text-[11px] text-slate-700 flex items-center gap-2 font-bold">
+                                                                                <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
+                                                                                    <Icons.Users size={10} />
+                                                                                </div>
+                                                                                <span className="truncate"> {row.from_account_name} </span>
+                                                                            </div>
+                                                                            <div className="text-[10px] text-slate-500 font-mono flex items-center pl-7 gap-2">
+                                                                                {row.from_account_no}
+                                                                                <span className="px-2 py-0.5 rounded-md text-[9px] font-black text-white shadow-sm" style={{ backgroundColor: BANK_COLORS[row.from_bank_shortname] || '#94a3b8' }}>
+                                                                                    {row.from_bank_shortname}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+
+                                                                {/* 3. à¸ªà¸–à¸²à¸™à¸°à¸‡à¸²à¸™ */}
+                                                                <td className="px-4 py-6 align-top text-center relative">
+                                                                    <div className="pt-1">
                                                                         <CustomStatusSelect 
                                                                             value={tInfo.status}
                                                                             isSaving={isSavingStatus}
                                                                             onChange={(newStatus) => {
-                                                                                // 🚨 1. เงื่อนไข: เปลี่ยนเป็น "จัดทำรายงานสืบแล้ว" ต้องมีลิงก์ HTTP
-                                                                                if (newStatus === 'จัดทำรายงานสืบแล้ว' && (!tInfo.report_link || !tInfo.report_link.startsWith('http'))) {
+                                                                                if (newStatus === 'à¸ˆà¸±à¸”à¸—à¸³à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸·à¸šà¹à¸¥à¹‰à¸§' && (!tInfo.report_link || !tInfo.report_link.startsWith('http'))) {
                                                                                     setCustomAlert({
                                                                                         isOpen: true,
-                                                                                        title: "ไม่สามารถเปลี่ยนสถานะได้!",
-                                                                                        message: "กรุณาระบุ 'ลิงก์รายงานสืบ' (ต้องขึ้นต้นด้วย http:// หรือ https://) ในช่องด้านขวามือให้ถูกต้องก่อนครับ"
+                                                                                        title: "à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¹€à¸›à¸¥à¸µà¹ˆà¸¢à¸™à¸ªà¸–à¸²à¸™à¸°à¹„à¸”à¹‰!",
+                                                                                        message: "à¸à¸£à¸¸à¸“à¸²à¸£à¸°à¸šà¸¸ 'à¸¥à¸´à¸‡à¸à¹Œà¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸·à¸š' à¹ƒà¸™à¸Šà¹ˆà¸­à¸‡à¸”à¹‰à¸²à¸™à¸‚à¸§à¸²à¸¡à¸·à¸­à¹ƒà¸«à¹‰à¸–à¸¹à¸à¸•à¹‰à¸­à¸‡à¸à¹ˆà¸­à¸™à¸„à¸£à¸±à¸š"
                                                                                     });
-                                                                                    return; // หยุดการทำงาน
+                                                                                    return;
                                                                                 }
-
-                                                                                // 🚨 2. เงื่อนไข: เปลี่ยนเป็น "ไม่พบ..." ต้องมีหมายเหตุ
-                                                                                if (newStatus === 'ไม่พบ/ไม่สามารถดำเนินการได้เนื่องจาก...' && (!tInfo.note || tInfo.note.trim() === '' || tInfo.note === '-')) {
+                                                                                if (newStatus === 'à¹„à¸¡à¹ˆà¸žà¸š/à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸”à¸³à¹€à¸™à¸´à¸™à¸à¸²à¸£à¹„à¸”à¹‰à¹€à¸™à¸·à¹ˆà¸­à¸‡à¸ˆà¸²à¸...' && (!tInfo.note || tInfo.note.trim() === '' || tInfo.note === '-')) {
                                                                                     setCustomAlert({
                                                                                         isOpen: true,
-                                                                                        title: "ไม่สามารถเปลี่ยนสถานะได้!",
-                                                                                        message: "กรุณาระบุ 'หมายเหตุ' เพื่ออธิบายสาเหตุที่ไม่พบ หรือ ไม่สามารถดำเนินการได้ ก่อนครับ"
+                                                                                        title: "à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¹€à¸›à¸¥à¸µà¹ˆà¸¢à¸™à¸ªà¸–à¸²à¸™à¸°à¹„à¸”à¹‰!",
+                                                                                        message: "à¸à¸£à¸¸à¸“à¸²à¸£à¸°à¸šà¸¸ 'à¸«à¸¡à¸²à¸¢à¹€à¸«à¸•à¸¸' à¹€à¸žà¸·à¹ˆà¸­à¸­à¸˜à¸´à¸šà¸²à¸¢à¸ªà¸²à¹€à¸«à¸•à¸¸à¸—à¸µà¹ˆà¹„à¸¡à¹ˆà¸žà¸š à¸à¹ˆà¸­à¸™à¸„à¸£à¸±à¸š"
                                                                                     });
-                                                                                    return; // หยุดการทำงาน
+                                                                                    return;
                                                                                 }
-                                                                                
-                                                                                const now = new Date().toLocaleString('th-TH');
+                                                                                  const now = formatDateTime();
                                                                                 setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], status: newStatus, last_updated: now } }));
                                                                                 updateTaskInDB(row, newStatus, tInfo.note, tInfo.report_link, 'status');
                                                                             }}
                                                                         />
                                                                     </div>
                                                                 </td>
+
+                                                                {/* 4. à¸£à¸²à¸¢à¸¥à¸°à¹€à¸­à¸µà¸¢à¸”/à¸«à¸¡à¸²à¸¢à¹€à¸«à¸•à¸¸ */}
                                                                 <td className="px-6 py-6 align-top">
-                                                                    <div className="flex flex-col gap-2 w-full group/input">
-                                                                        <div className="relative">
-                                                                            <textarea 
-                                                                                rows="3"
-                                                                                className="bg-slate-50 border border-slate-200 text-[12px] font-medium rounded-2xl px-4 py-3 w-full outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 focus:bg-white shadow-inner placeholder-slate-400 transition-all resize-none group-hover/input:bg-white"
-                                                                                placeholder="ระบุรายละเอียดหรือหมายเหตุเพิ่มเติม..."
-                                                                                value={tInfo.note === "-" ? "" : tInfo.note}
-                                                                                onChange={(e) => setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], note: e.target.value } }))}
-                                                                                onBlur={(e) => {
-                                                                                    const now = new Date().toLocaleString('th-TH');
-                                                                                    setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], last_updated: now } }));
-                                                                                    updateTaskInDB(row, tInfo.status, e.target.value, tInfo.report_link, 'note');
-                                                                                }}
-                                                                            />
-                                                                            <div className="absolute right-3 bottom-3">
-                                                                                {isSavingNote ? <div className="loader w-4 h-4 border-2 border-indigo-500 border-t-transparent animate-spin"></div> : <Icons.Save size={16} className="text-slate-300 group-hover/input:text-indigo-400 transition-colors" />}
-                                                                            </div>
+                                                                    <div className="relative group/input">
+                                                                        <textarea 
+                                                                            rows="3"
+                                                                            className="bg-slate-50 border border-slate-200 text-[12px] font-medium rounded-2xl px-4 py-3 w-full outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 focus:bg-white shadow-inner placeholder-slate-400 transition-all resize-none group-hover/input:bg-white"
+                                                                            placeholder="à¸£à¸°à¸šà¸¸à¸«à¸¡à¸²à¸¢à¹€à¸«à¸•à¸¸à¹€à¸žà¸´à¹ˆà¸¡à¹€à¸•à¸´à¸¡..."
+                                                                            value={tInfo.note === "-" ? "" : tInfo.note}
+                                                                            onChange={(e) => setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], note: e.target.value } }))}
+                                                                            onBlur={(e) => {
+                                                                                  const now = formatDateTime();
+                                                                                setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], last_updated: now } }));
+                                                                                updateTaskInDB(row, tInfo.status, e.target.value, tInfo.report_link, 'note');
+                                                                            }}
+                                                                        />
+                                                                        <div className="absolute right-3 bottom-3 text-slate-300">
+                                                                            {isSavingNote ? <div className="loader w-3.5 h-3.5 border-2 border-indigo-500 border-t-transparent animate-spin"></div> : <Icons.Save size={14} className="group-focus-within/input:text-indigo-400 transition-colors" />}
                                                                         </div>
                                                                     </div>
                                                                 </td>
+
+                                                                {/* 5. à¸¥à¸´à¸‡à¸à¹Œà¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸·à¸šà¸ªà¸§à¸™ */}
                                                                 <td className="px-6 py-6 align-top">
                                                                     <div className="flex flex-col gap-3 w-full items-end">
-                                                                        <div className="relative w-full max-w-[240px]">
-                                                                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
-                                                                                <Icons.Link size={14} />
+                                                                        <div className="relative w-full">
+                                                                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                                                                <Icons.Link size={12} />
                                                                             </div>
                                                                             <input
                                                                                 type="url"
-                                                                                className="bg-slate-50 border border-slate-200 text-[11px] font-bold rounded-xl pl-10 pr-4 py-2.5 w-full outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 focus:bg-white shadow-inner placeholder-slate-400 transition-all"
-                                                                                placeholder="URL รายงานสืบสวน..."
+                                                                                className="bg-slate-50 border border-slate-200 text-[11px] font-bold rounded-xl pl-9 pr-4 py-2.5 w-full outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 focus:bg-white shadow-inner placeholder-slate-400 transition-all"
+                                                                                placeholder="à¸§à¸²à¸‡à¸¥à¸´à¸‡à¸à¹Œà¸—à¸µà¹ˆà¸™à¸µà¹ˆ..."
                                                                                 value={tInfo.report_link}
                                                                                 onChange={(e) => setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], report_link: e.target.value } }))}
                                                                                 onBlur={(e) => {
                                                                                     let val = e.target.value.trim();
                                                                                     if (val !== '' && !val.startsWith('http')) {
-                                                                                        setCustomAlert({
-                                                                                            isOpen: true,
-                                                                                            title: "รูปแบบลิงก์ไม่ถูกต้อง!",
-                                                                                            message: "กรุณาใส่ลิงก์ที่สามารถเปิดดูได้ (ต้องขึ้นต้นด้วย http:// หรือ https://) เช่น https://drive.google.com/..."
-                                                                                        });
+                                                                                        setCustomAlert({ isOpen: true, title: "à¸¥à¸´à¸‡à¸à¹Œà¹„à¸¡à¹ˆà¸–à¸¹à¸à¸•à¹‰à¸­à¸‡!", message: "à¸à¸£à¸¸à¸“à¸²à¹ƒà¸ªà¹ˆà¸¥à¸´à¸‡à¸à¹Œà¸—à¸µà¹ˆà¹€à¸›à¸´à¸”à¹„à¸”à¹‰ à¹€à¸Šà¹ˆà¸™ http://..." });
                                                                                         val = '';
                                                                                     }
-                                                                                    const now = val === '' ? "" : new Date().toLocaleString('th-TH');
+                                                                                    const now = new Date().toLocaleString('th-TH');
                                                                                     setTaskStatus(p => ({ ...p, [row.id]: { ...p[row.id], report_link: val, last_updated: now } }));
                                                                                     updateTaskInDB(row, tInfo.status, tInfo.note, val, 'link');
                                                                                 }}
@@ -1706,27 +1703,22 @@ const runDashboard = () => {
                                                                         </div>
                                                                         <div className="flex items-center gap-2">
                                                                             {tInfo.report_link && tInfo.report_link.startsWith('http') && (
-                                                                                <a 
-                                                                                    href={tInfo.report_link}
-                                                                                    target="_blank"
-                                                                                    rel="noopener noreferrer"
-                                                                                    className="inline-flex items-center gap-2 px-4 py-2 text-[11px] font-black bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 uppercase tracking-wider"
-                                                                                >
-                                                                                    <Icons.ExternalLink size={14} /> OPEN REPORT
+                                                                                <a href={tInfo.report_link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-1.5 text-[10px] font-black bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all shadow-md uppercase tracking-wider">
+                                                                                    <Icons.ExternalLink size={12} /> OPEN
                                                                                 </a>
                                                                             )}
-                                                                            {isSavingLink && <div className="loader w-4 h-4 border-2 border-indigo-500 border-t-transparent animate-spin ml-2"></div>}
+                                                                            {isSavingLink && <div className="loader w-3.5 h-3.5 border-2 border-indigo-500 border-t-transparent animate-spin ml-1"></div>}
                                                                         </div>
                                                                         
-                                                                        {tInfo.report_link && tInfo.report_link.startsWith('http') && tInfo.last_updated && tInfo.last_updated !== "-" && (
-                                                                            <div className="text-[10px] text-slate-400 flex items-center gap-1.5 font-bold uppercase tracking-wider bg-slate-100 px-2 py-1 rounded-md">
+                                                                        {tInfo.last_updated && tInfo.last_updated !== "-" && (
+                                                                            <div className="text-[9px] text-slate-400 flex items-center gap-1.5 font-black uppercase tracking-widest bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200/50 shadow-sm whitespace-nowrap">
                                                                                 <Icons.Clock size={10} /> UPDATED: {tInfo.last_updated}
                                                                             </div>
                                                                         )}
                                                                     </div>
                                                                 </td>
                                                             </tr>
-                                                        ); 
+                                                        );
                                                     })}
                                                 </tbody>
                                             </table>
@@ -1743,7 +1735,7 @@ const runDashboard = () => {
                                             <div className="flex items-center gap-4">
                                                 <div className="p-3 bg-amber-500/10 rounded-2xl text-amber-600 shadow-inner ring-1 ring-amber-100"> <Icons.Briefcase size={22} /></div>
                                                 <div>
-                                                    <h3 className="font-black text-slate-800 text-base tracking-tight"> สรุปผลงานตามหน่วยรับผิดชอบ </h3>
+                                                    <h3 className="font-black text-slate-800 text-base tracking-tight"> à¸ªà¸£à¸¸à¸›à¸œà¸¥à¸‡à¸²à¸™à¸•à¸²à¸¡à¸«à¸™à¹ˆà¸§à¸¢à¸£à¸±à¸šà¸œà¸´à¸”à¸Šà¸­à¸š </h3>
                                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5"> Performance by Responsible Units </p>
                                                 </div>
                                             </div>
@@ -1753,11 +1745,11 @@ const runDashboard = () => {
                                                 <thead className="bg-slate-50/80 backdrop-blur-sm text-[11px] text-slate-500 font-black sticky top-0 shadow-sm z-10 border-b border-slate-200 uppercase tracking-wider">
                                                     <tr>
                                                         <th className="px-6 py-5 w-[5%] text-center"># </th>
-                                                        <th className="px-6 py-5 w-[30%]"> สน./ สภ.ที่รับผิดชอบ </th>
-                                                        <th className="px-6 py-5 w-[15%]"> ภ.จว.</th>
-                                                        <th className="px-6 py-5 w-[15%] text-center"> จำนวนคดี </th>
-                                                        <th className="px-6 py-5 w-[15%] text-right"> ยอดเสียหายรวม </th>
-                                                        <th className="px-6 py-5 w-[20%] text-center"> ผลการดำเนินงาน </th>
+                                                        <th className="px-6 py-5 w-[30%]"> à¸ªà¸™./ à¸ªà¸ .à¸—à¸µà¹ˆà¸£à¸±à¸šà¸œà¸´à¸”à¸Šà¸­à¸š </th>
+                                                        <th className="px-6 py-5 w-[15%]"> à¸ .à¸ˆà¸§.</th>
+                                                        <th className="px-6 py-5 w-[15%] text-center"> à¸ˆà¸³à¸™à¸§à¸™à¸„à¸”à¸µ </th>
+                                                        <th className="px-6 py-5 w-[15%] text-right"> à¸¢à¸­à¸”à¹€à¸ªà¸µà¸¢à¸«à¸²à¸¢à¸£à¸§à¸¡ </th>
+                                                        <th className="px-6 py-5 w-[20%] text-center"> à¸œà¸¥à¸à¸²à¸£à¸”à¸³à¹€à¸™à¸´à¸™à¸‡à¸²à¸™ </th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-100/80">
@@ -1780,11 +1772,11 @@ const runDashboard = () => {
                                                                 </td>
                                                                 <td className="px-6 py-5 align-middle text-center">
                                                                     <span className="font-black text-slate-800 text-base tabular-nums"> {stat.count} </span>
-                                                                    <span className="text-[10px] text-slate-400 font-bold ml-1 uppercase"> เคส </span>
+                                                                    <span className="text-[10px] text-slate-400 font-bold ml-1 uppercase"> à¹€à¸„à¸ª </span>
                                                                 </td>
                                                                 <td className="px-6 py-5 align-middle text-right">
                                                                     <span className="font-black text-[#e11d48] text-base tabular-nums"> {formatMoney(stat.amount)} </span>
-                                                                    <span className="text-[10px] text-slate-400 font-bold ml-1">฿</span>
+                                                                    <span className="text-[10px] text-slate-400 font-bold ml-1">à¸¿</span>
                                                                 </td>
                                                                 <td className="px-6 py-5 align-middle">
                                                                     <div className="flex flex-col gap-2">
@@ -1806,7 +1798,7 @@ const runDashboard = () => {
                                                             <td colSpan="6" className="px-6 py-16 text-center">
                                                                 <div className="flex flex-col items-center gap-3">
                                                                     <Icons.Inbox size={48} className="text-slate-200" />
-                                                                    <p className="text-slate-400 font-bold text-sm tracking-tight"> ไม่พบข้อมูลหน่วยงานรับผิดชอบในเงื่อนไขที่ค้นหา </p>
+                                                                    <p className="text-slate-400 font-bold text-sm tracking-tight"> à¹„à¸¡à¹ˆà¸žà¸šà¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸«à¸™à¹ˆà¸§à¸¢à¸‡à¸²à¸™à¸£à¸±à¸šà¸œà¸´à¸”à¸Šà¸­à¸šà¹ƒà¸™à¹€à¸‡à¸·à¹ˆà¸­à¸™à¹„à¸‚à¸—à¸µà¹ˆà¸„à¹‰à¸™à¸«à¸² </p>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -1822,14 +1814,14 @@ const runDashboard = () => {
                     )}
                 </main>
 
-                {/* Modal สถิติเชิงลึก (ที่เด้งตอนคลิกกราฟ) */}
+                {/* Modal à¸ªà¸–à¸´à¸•à¸´à¹€à¸Šà¸´à¸‡à¸¥à¸¶à¸ (à¸—à¸µà¹ˆà¹€à¸”à¹‰à¸‡à¸•à¸­à¸™à¸„à¸¥à¸´à¸à¸à¸£à¸²à¸Ÿ) */}
                 {barDetailOpen && (
                     <div className="fixed inset-0 bg-slate-900/60 z-[200] flex items-center justify-center p-4 backdrop-blur-sm transition-all" onClick={() => { setBarDetailOpen(false); setModalProvinceFilter(null); }}>
                         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] border border-slate-200" onClick={e => e.stopPropagation()}>
                             <div className="p-4 md:p-5 bg-gradient-to-r from-[#1e293b] to-[#334155] text-white flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-3 shadow-md z-10">
                                 <h3 className="font-bold flex items-center gap-2.5 text-[14px] md:text-[16px]">
                                     <div className="bg-white/10 p-1.5 rounded-lg"> <Icons.Activity size={18} className="text-[#f97316]" /> </div>
-                                    <span className="truncate max-w-[200px] md:max-w-md"> สถิติเชิงลึก: {barDetailInfo.title} </span>
+                                    <span className="truncate max-w-[200px] md:max-w-md"> à¸ªà¸–à¸´à¸•à¸´à¹€à¸Šà¸´à¸‡à¸¥à¸¶à¸: {barDetailInfo.title} </span>
                                 </h3>
                                 <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
                                     <button onClick={downloadCSV} className="flex items-center gap-1.5 bg-green-600 hover:bg-green-500 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors shadow-sm border border-green-500">
@@ -1845,15 +1837,15 @@ const runDashboard = () => {
                                     <div className="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
                                         <div className="bg-blue-50 border border-blue-100 p-3.5 rounded-xl text-blue-600 shadow-inner shrink-0"> <Icons.Activity size={26} /></div>
                                         <div className="overflow-hidden">
-                                            <div className="text-[10px] md:text-[11px] text-slate-500 font-bold mb-1 tracking-wide truncate"> จำนวนรายการ(FREQUENCY) </div>
-                                            <div className="text-2xl md:text-3xl font-bold text-slate-800 truncate"> {barDetailInfo.summary.count} <span className="text-xs md:text-sm font-normal text-slate-500"> เคส / ครั้ง </span></div>
+                                            <div className="text-[10px] md:text-[11px] text-slate-500 font-bold mb-1 tracking-wide truncate"> à¸ˆà¸³à¸™à¸§à¸™à¸£à¸²à¸¢à¸à¸²à¸£(FREQUENCY) </div>
+                                            <div className="text-2xl md:text-3xl font-bold text-slate-800 truncate"> {barDetailInfo.summary.count} <span className="text-xs md:text-sm font-normal text-slate-500"> à¹€à¸„à¸ª / à¸„à¸£à¸±à¹‰à¸‡ </span></div>
                                         </div>
                                     </div>
                                     <div className="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
                                         <div className="bg-red-50 border border-red-100 p-3.5 rounded-xl text-red-600 shadow-inner shrink-0"> <Icons.DollarSign size={26} /></div>
                                         <div className="overflow-hidden">
-                                            <div className="text-[10px] md:text-[11px] text-slate-500 font-bold mb-1 tracking-wide truncate"> ยอดความเสียหายรวม(TOTAL AMOUNT) </div>
-                                            <div className="text-2xl md:text-3xl font-bold text-[#e11d48] truncate" title={formatMoney(barDetailInfo.summary.amount)}> {formatMoney(barDetailInfo.summary.amount)} <span className="text-xs md:text-sm font-normal text-slate-500"> บาท </span></div>
+                                            <div className="text-[10px] md:text-[11px] text-slate-500 font-bold mb-1 tracking-wide truncate"> à¸¢à¸­à¸”à¸„à¸§à¸²à¸¡à¹€à¸ªà¸µà¸¢à¸«à¸²à¸¢à¸£à¸§à¸¡(TOTAL AMOUNT) </div>
+                                            <div className="text-2xl md:text-3xl font-bold text-[#e11d48] truncate" title={formatMoney(barDetailInfo.summary.amount)}> {formatMoney(barDetailInfo.summary.amount)} <span className="text-xs md:text-sm font-normal text-slate-500"> à¸šà¸²à¸— </span></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1861,7 +1853,7 @@ const runDashboard = () => {
                                 {provinceBreakdown.length > 0 && (
                                     <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-6 w-full">
                                         <h4 className="text-[12px] text-slate-500 font-bold mb-3 flex items-center gap-1.5">
-                                            <Icons.MapPin size={14} /> สัดส่วนแยกตามจังหวัด (ภ.จว.) <span className="text-[10px] font-normal text-slate-400 ml-1 hidden sm:inline">(คลิกเพื่อกรองข้อมูลตารางด้านล่าง)</span>
+                                            <Icons.MapPin size={14} /> à¸ªà¸±à¸”à¸ªà¹ˆà¸§à¸™à¹à¸¢à¸à¸•à¸²à¸¡à¸ˆà¸±à¸‡à¸«à¸§à¸±à¸” (à¸ .à¸ˆà¸§.) <span className="text-[10px] font-normal text-slate-400 ml-1 hidden sm:inline">(à¸„à¸¥à¸´à¸à¹€à¸žà¸·à¹ˆà¸­à¸à¸£à¸­à¸‡à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸•à¸²à¸£à¸²à¸‡à¸”à¹‰à¸²à¸™à¸¥à¹ˆà¸²à¸‡)</span>
                                         </h4>
                                         <div className="flex flex-wrap gap-2">
                                             {modalProvinceFilter && (
@@ -1869,7 +1861,7 @@ const runDashboard = () => {
                                                     onClick={() => setModalProvinceFilter(null)}
                                                     className="flex items-center gap-1 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 rounded-lg px-3 py-1.5 shadow-sm transition-colors text-[11px] font-bold outline-none shrink-0"
                                                 >
-                                                    <span className="text-sm leading-none">&times; </span> ล้างตัวกรอง
+                                                    <span className="text-sm leading-none">&times; </span> à¸¥à¹‰à¸²à¸‡à¸•à¸±à¸§à¸à¸£à¸­à¸‡
                                                 </button>
                                             )}
                                             {provinceBreakdown.map(prov => {
@@ -1892,7 +1884,7 @@ const runDashboard = () => {
                                 {barDetailInfo.type === 'task' ? (
                                     <>
                                         <h4 className="font-bold text-slate-800 mb-4 text-[14px] flex items-center gap-2">
-                                            <Icons.ClipboardList size={18} className="text-indigo-500" /> รายการคดี / งาน ในสถานะนี้
+                                            <Icons.ClipboardList size={18} className="text-indigo-500" /> à¸£à¸²à¸¢à¸à¸²à¸£à¸„à¸”à¸µ / à¸‡à¸²à¸™ à¹ƒà¸™à¸ªà¸–à¸²à¸™à¸°à¸™à¸µà¹‰
                                         </h4>
                                         {barDetailInfo.cases.length > 0 ? (
                                             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden w-full overflow-x-auto">
@@ -1900,15 +1892,15 @@ const runDashboard = () => {
                                                     <thead className="bg-slate-50 text-[10px] text-slate-500 uppercase border-b border-slate-200">
                                                         <tr>
                                                             <th className="px-5 py-4 font-bold text-center w-12 whitespace-nowrap"># </th>
-                                                            <th className="px-5 py-4 font-bold min-w-[250px]"> ATM / BRANCH / ข้อมูลคดี </th>
-                                                            <th className="px-5 py-4 font-bold text-center whitespace-nowrap w-[15%]"> สถานะ </th>
+                                                            <th className="px-5 py-4 font-bold min-w-[250px]"> ATM / BRANCH / à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸„à¸”à¸µ </th>
+                                                            <th className="px-5 py-4 font-bold text-center whitespace-nowrap w-[15%]"> à¸ªà¸–à¸²à¸™à¸° </th>
                                                             <th
                                                                 className="px-5 py-4 font-bold text-right cursor-pointer hover:bg-slate-200 transition-colors group select-none whitespace-nowrap w-[20%]"
                                                                 onClick={() => requestModalSort('transfer_amount')}
-                                                                title="คลิกเพื่อจัดเรียง"
+                                                                title="à¸„à¸¥à¸´à¸à¹€à¸žà¸·à¹ˆà¸­à¸ˆà¸±à¸”à¹€à¸£à¸µà¸¢à¸‡"
                                                             >
                                                                 <div className="flex items-center justify-end gap-1.5">
-                                                                    ยอดความเสียหาย(บาท)
+                                                                    à¸¢à¸­à¸”à¸„à¸§à¸²à¸¡à¹€à¸ªà¸µà¸¢à¸«à¸²à¸¢(à¸šà¸²à¸—)
                                                                     {modalSortConfig.key === 'transfer_amount' ? (
                                                                         modalSortConfig.direction === 'asc' ? <Icons.ArrowUp size={12} className="text-indigo-600" /> : <Icons.ArrowDown size={12} className="text-indigo-600" />
                                                                     ) : (
@@ -1920,7 +1912,7 @@ const runDashboard = () => {
                                                     </thead>
                                                     <tbody className="divide-y divide-slate-100">
                                                         {sortedModalCases.map((row, idx) => {
-                                                            const currentStatus = taskStatus[row.id]?.status || row.status_name || "รอรับเรื่อง";
+                                                            const currentStatus = taskStatus[row.id]?.status || row.status_name || "à¸£à¸­à¸£à¸±à¸šà¹€à¸£à¸·à¹ˆà¸­à¸‡";
                                                             const currentLink = taskStatus[row.id]?.report_link || row.report_link || "";
                                                             return (
                                                                 <tr key={idx} className="hover:bg-slate-50 transition-colors">
@@ -1930,7 +1922,7 @@ const runDashboard = () => {
                                                                         <div className="flex flex-col gap-1.5">
                                                                             <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
                                                                                 <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200">
-                                                                                    <Icons.Building size={10} className="text-slate-400" /> {row.atm_province.replace(/^จังหวัด/, '').replace(/^ภ\.จว\./, '')}
+                                                                                    <Icons.Building size={10} className="text-slate-400" /> {row.atm_province.replace(/^à¸ˆà¸±à¸‡à¸«à¸§à¸±à¸”/, '').replace(/^à¸ \.à¸ˆà¸§\./, '')}
                                                                                 </div>
                                                                                 {(row.atm_lat && row.atm_lon) && (
                                                                                     <button 
@@ -1940,7 +1932,7 @@ const runDashboard = () => {
                                                                                         }}
                                                                                         className="text-blue-500 hover:text-blue-700 hover:underline flex items-center gap-1 transition-colors"
                                                                                     >
-                                                                                        <Icons.MapFold size={12}/> ดูพิกัด
+                                                                                        <Icons.MapFold size={12}/> à¸”à¸¹à¸žà¸´à¸à¸±à¸”
                                                                                     </button>
                                                                                 )}
                                                                             </div>
@@ -1950,8 +1942,8 @@ const runDashboard = () => {
                                                                                     <span className="text-slate-500"> {row.case_type_detail} </span>
                                                                                 </div>
                                                                                 <div className="text-[10px] text-slate-400 mt-0.5">
-                                                                                    วันที่: {row.complaint_date}
-                                                                                    {row.transfer_time && <span className="font-medium text-slate-500 ml-1"> เวลา {row.transfer_time} น.</span>}
+                                                                                    à¸§à¸±à¸™à¸—à¸µà¹ˆ: {row.complaint_date}
+                                                                                    {row.transfer_time && <span className="font-medium text-slate-500 ml-1"> à¹€à¸§à¸¥à¸² {row.transfer_time} à¸™.</span>}
                                                                                 </div>
                                                                             </div>
                                                                             <div className="mt-1.5 pt-1.5 border-t border-slate-100 flex flex-col gap-1">
@@ -1973,14 +1965,14 @@ const runDashboard = () => {
                                                                             <span className={`inline-block text-[11px] font-bold py-1 px-3 rounded-full border shadow-sm ${getStatusColorClass(currentStatus)}`}>
                                                                                 {currentStatus}
                                                                             </span>
-                                                                            {currentStatus === 'จัดทำรายงานสืบแล้ว' && currentLink && currentLink.startsWith('http') && (
+                                                                            {currentStatus === 'à¸ˆà¸±à¸”à¸—à¸³à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸·à¸šà¹à¸¥à¹‰à¸§' && currentLink && currentLink.startsWith('http') && (
                                                                                 <a 
                                                                                     href={currentLink}
                                                                                     target="_blank"
                                                                                     rel="noopener noreferrer"
                                                                                     className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-200 rounded hover:bg-indigo-100 transition-colors shadow-sm"
                                                                                 >
-                                                                                    <Icons.ExternalLink size={12} /> ดูรายงาน
+                                                                                    <Icons.ExternalLink size={12} /> à¸”à¸¹à¸£à¸²à¸¢à¸‡à¸²à¸™
                                                                                 </a>
                                                                             )}
                                                                         </div>
@@ -1995,13 +1987,13 @@ const runDashboard = () => {
                                                 </table>
                                             </div>
                                         ) : (
-                                            <div className="text-center py-10 text-slate-500 text-sm bg-white rounded-xl border border-slate-200"> ไม่พบข้อมูลในสถานะนี้ </div>
+                                            <div className="text-center py-10 text-slate-500 text-sm bg-white rounded-xl border border-slate-200"> à¹„à¸¡à¹ˆà¸žà¸šà¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¹ƒà¸™à¸ªà¸–à¸²à¸™à¸°à¸™à¸µà¹‰ </div>
                                         )}
                                     </>
                                 ) : (
                                     <>
                                         <h4 className="font-bold text-slate-800 mb-4 text-[14px] flex items-center gap-2">
-                                            <Icons.Users size={18} className="text-indigo-500" /> ข้อมูลบัญชีม้าที่เกี่ยวข้อง
+                                            <Icons.Users size={18} className="text-indigo-500" /> à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸šà¸±à¸à¸Šà¸µà¸¡à¹‰à¸²à¸—à¸µà¹ˆà¹€à¸à¸µà¹ˆà¸¢à¸§à¸‚à¹‰à¸­à¸‡
                                         </h4>
                                         {barDetailInfo.mules.length > 0 ? (
                                             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden w-full overflow-x-auto">
@@ -2009,11 +2001,11 @@ const runDashboard = () => {
                                                     <thead className="bg-slate-50 text-[10px] text-slate-500 uppercase border-b border-slate-200">
                                                         <tr>
                                                             <th className="px-4 py-4 font-bold text-center w-10 whitespace-nowrap"># </th>
-                                                            <th className="px-4 py-4 font-bold whitespace-nowrap"> ชื่อบัญชีม้า </th>
-                                                            <th className="px-4 py-4 font-bold whitespace-nowrap"> เลขที่บัญชี </th>
-                                                            <th className="px-4 py-4 font-bold text-center whitespace-nowrap"> ธนาคาร </th>
-                                                            <th className="px-4 py-4 font-bold text-center whitespace-nowrap"> จังหวัดที่ถอน </th>
-                                                            <th className="px-5 py-4 font-bold text-right"> ยอดรวม(บาท) </th>
+                                                            <th className="px-4 py-4 font-bold whitespace-nowrap"> à¸Šà¸·à¹ˆà¸­à¸šà¸±à¸à¸Šà¸µà¸¡à¹‰à¸² </th>
+                                                            <th className="px-4 py-4 font-bold whitespace-nowrap"> à¹€à¸¥à¸‚à¸—à¸µà¹ˆà¸šà¸±à¸à¸Šà¸µ </th>
+                                                            <th className="px-4 py-4 font-bold text-center whitespace-nowrap"> à¸˜à¸™à¸²à¸„à¸²à¸£ </th>
+                                                            <th className="px-4 py-4 font-bold text-center whitespace-nowrap"> à¸ˆà¸±à¸‡à¸«à¸§à¸±à¸”à¸—à¸µà¹ˆà¸–à¸­à¸™ </th>
+                                                            <th className="px-5 py-4 font-bold text-right"> à¸¢à¸­à¸”à¸£à¸§à¸¡(à¸šà¸²à¸—) </th>
                                                         </tr>
                                                     </thead>
                                                     <tbody className="divide-y divide-slate-100">
@@ -2035,7 +2027,7 @@ const runDashboard = () => {
                                                 </table>
                                             </div>
                                         ) : (
-                                            <div className="text-center py-10 text-slate-500 text-sm bg-white rounded-xl border border-slate-200"> ไม่พบข้อมูลบัญชีม้าในหมวดหมู่นี้ </div>
+                                            <div className="text-center py-10 text-slate-500 text-sm bg-white rounded-xl border border-slate-200"> à¹„à¸¡à¹ˆà¸žà¸šà¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸šà¸±à¸à¸Šà¸µà¸¡à¹‰à¸²à¹ƒà¸™à¸«à¸¡à¸§à¸”à¸«à¸¡à¸¹à¹ˆà¸™à¸µà¹‰ </div>
                                         )}
                                     </>
                                 )}
@@ -2044,7 +2036,7 @@ const runDashboard = () => {
                     </div>
                 )}
 
-                {/* Modal ล็อกอินเข้า Dashboard */}
+                {/* Modal à¸¥à¹‡à¸­à¸à¸­à¸´à¸™à¹€à¸‚à¹‰à¸² Dashboard */}
                 {authModalOpen && (
                     <div className="fixed inset-0 bg-slate-900/40 z-[400] flex items-center justify-center p-4 backdrop-blur-md transition-all animate-in fade-in duration-300">
                         <div className="glass-panel rounded-3xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-500 border border-white/40">
@@ -2054,14 +2046,14 @@ const runDashboard = () => {
                                     <Icons.Lock size={40} />
                                 </div>
                                 <h3 className="text-2xl font-black text-slate-800 tracking-tight"> RESTRICTED AREA </h3>
-                                <p className="text-sm text-slate-500 mt-2 font-medium"> กรุณากรอกรหัส PIN เพื่อเข้าถึง Dashboard </p>
+                                <p className="text-sm text-slate-500 mt-2 font-medium"> à¸à¸£à¸¸à¸“à¸²à¸à¸£à¸­à¸à¸£à¸«à¸±à¸ª PIN à¹€à¸žà¸·à¹ˆà¸­à¹€à¸‚à¹‰à¸²à¸–à¸¶à¸‡ Dashboard </p>
                             </div>
                             <form onSubmit={handlePinSubmit} className="p-8 pt-0">
                                 <div className="mb-6 relative group">
                                     <input 
                                         type="password"
                                         autoFocus
-                                        placeholder="••••"
+                                        placeholder="â€¢â€¢â€¢â€¢"
                                         className={`w-full text-center tracking-[1em] font-black text-3xl py-4 rounded-2xl border transition-all shadow-inner bg-white/50 backdrop-blur-sm outline-none ${pinError ? 'border-red-300 bg-red-50 focus:ring-red-200 text-red-600 animate-shake' : 'border-slate-200 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white text-slate-700'}`}
                                         value={pinInput}
                                         onChange={(e) => { 
@@ -2085,7 +2077,7 @@ const runDashboard = () => {
                     </div>
                 )}
 
-                {/* 🚨 ใหม่ล่าสุด! Custom Modal สำหรับแจ้งเตือน Error สวยๆ */}
+                {/* ðŸš¨ à¹ƒà¸«à¸¡à¹ˆà¸¥à¹ˆà¸²à¸ªà¸¸à¸”! Custom Modal à¸ªà¸³à¸«à¸£à¸±à¸šà¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™ Error à¸ªà¸§à¸¢à¹† */}
                 {customAlert.isOpen && (
                     <div className="fixed inset-0 bg-slate-900/60 z-[500] flex items-center justify-center p-4 backdrop-blur-sm transition-all animate-in fade-in">
                         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
@@ -2101,7 +2093,7 @@ const runDashboard = () => {
                                     onClick={() => setCustomAlert({ ...customAlert, isOpen: false })} 
                                     className="w-full py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-md"
                                 >
-                                    ตกลง / เข้าใจแล้ว
+                                    à¸•à¸à¸¥à¸‡ / à¹€à¸‚à¹‰à¸²à¹ƒà¸ˆà¹à¸¥à¹‰à¸§
                                 </button>
                             </div>
                         </div>
