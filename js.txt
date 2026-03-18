@@ -443,6 +443,7 @@ const runDashboard = () => {
         const [selectedStatus, setSelectedStatus] = useState("All");
         const [selectedRespProv, setSelectedRespProv] = useState("All");
         const [selectedRespStation, setSelectedRespStation] = useState("All");
+        const [selectedRespRegion, setSelectedRespRegion] = useState("All");
         const [startDate, setStartDate] = useState("");
         const [endDate, setEndDate] = useState("");
         const [startTime, setStartTime] = useState("");
@@ -875,10 +876,17 @@ const runDashboard = () => {
             return Array.from(set);
         }, [taskStatus]);
 
-        const respProvOptions = useMemo(() => {
-            const set = new Set(data.map(d => d.resp_prov).filter(p => p && p !== '-'));
+        const respRegionOptions = useMemo(() => {
+            const set = new Set(data.map(d => d.resp_region).filter(r => r && r !== '-'));
             return Array.from(set).sort();
         }, [data]);
+
+        const respProvOptions = useMemo(() => {
+            let validData = data;
+            if (selectedRespRegion !== "All") validData = validData.filter(d => d.resp_region === selectedRespRegion);
+            const set = new Set(validData.map(d => d.resp_prov).filter(p => p && p !== '-'));
+            return Array.from(set).sort();
+        }, [data, selectedRespRegion]);
 
         const respStationOptions = useMemo(() => {
             let validData = data;
@@ -893,6 +901,7 @@ const runDashboard = () => {
                 if (selectedProv !== "All" && item.atm_province !== selectedProv) return false;
                 if (selectedBranch !== "All" && item.atm_location !== selectedBranch) return false;
                 if (selectedType !== "All" && item.case_type_detail !== selectedType) return false;
+                if (selectedRespRegion !== "All" && item.resp_region !== selectedRespRegion) return false;
                 if (selectedRespProv !== "All" && item.resp_prov !== selectedRespProv) return false;
                 if (selectedRespStation !== "All" && item.resp_station !== selectedRespStation) return false;
 
@@ -921,7 +930,7 @@ const runDashboard = () => {
                 }
                 return true;
             });
-        }, [data, selectedBank, selectedProv, selectedBranch, selectedType, selectedStatus, selectedRespProv, selectedRespStation, startDate, endDate, startTime, endTime, searchQuery, taskStatus]);
+        }, [data, selectedBank, selectedProv, selectedBranch, selectedType, selectedStatus, selectedRespRegion, selectedRespProv, selectedRespStation, startDate, endDate, startTime, endTime, searchQuery, taskStatus]);
 
         const totalAmount = useMemo(() => filteredData.reduce((s, i) => s + parseAmount(i.transfer_amount), 0), [filteredData]);
         const totalCases = useMemo(() => {
@@ -1093,6 +1102,13 @@ const runDashboard = () => {
                     </div>
 
                     <div className="col-span-1 lg:col-span-2">
+                        <label className="text-[11px] font-bold text-amber-500 uppercase tracking-widest mb-2 flex items-center gap-1.5"> <Icons.Shield size={14} /> บช.ที่รับผิดชอบ</label>
+                        <select className="w-full border border-amber-200 rounded-2xl px-3 py-3 text-sm bg-amber-50/30 text-amber-900 outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all cursor-pointer font-medium" value={selectedRespRegion} onChange={e => { setSelectedRespRegion(e.target.value); setSelectedRespProv("All"); setSelectedRespStation("All"); }}>
+                            <option value="All"> ทั้งหมด </option>
+                            {respRegionOptions.map(r => <option key={r} value={r}>{r}</option>)}
+                        </select>
+                    </div>
+                    <div className="col-span-1 lg:col-span-2">
                         <label className="text-[11px] font-bold text-amber-500 uppercase tracking-widest mb-2 flex items-center gap-1.5"> <Icons.Shield size={14} /> ภ.จว.ที่รับผิดชอบ</label>
                         <select className="w-full border border-amber-200 rounded-2xl px-3 py-3 text-sm bg-amber-50/30 text-amber-900 outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all cursor-pointer font-medium" value={selectedRespProv} onChange={e => { setSelectedRespProv(e.target.value); setSelectedRespStation("All"); }}>
                             <option value="All"> ทั้งหมด </option>
@@ -1145,9 +1161,9 @@ const runDashboard = () => {
                     </div>
                     
                     <div className="flex gap-3 w-full md:w-auto">
-                        {(startDate || endDate || startTime || endTime || selectedBranch !== "All" || selectedType !== "All" || selectedStatus !== "All" || selectedProv !== "All" || selectedRespProv !== "All" || selectedRespStation !== "All" || searchQuery) && (
+                        {(startDate || endDate || startTime || endTime || selectedBranch !== "All" || selectedType !== "All" || selectedStatus !== "All" || selectedProv !== "All" || selectedRespRegion !== "All" || selectedRespProv !== "All" || selectedRespStation !== "All" || searchQuery) && (
                             <button 
-                                onClick={() => { setStartDate(""); setEndDate(""); setStartTime(""); setEndTime(""); setSelectedBranch("All"); setSelectedType("All"); setSelectedStatus("All"); setSelectedProv("All"); setSelectedRespProv("All"); setSelectedRespStation("All"); setSearchQuery(""); }}
+                                onClick={() => { setStartDate(""); setEndDate(""); setStartTime(""); setEndTime(""); setSelectedBranch("All"); setSelectedType("All"); setSelectedStatus("All"); setSelectedProv("All"); setSelectedRespRegion("All"); setSelectedRespProv("All"); setSelectedRespStation("All"); setSearchQuery(""); }}
                                 className="flex-1 md:flex-none px-4 py-2.5 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-2 border border-red-100"
                             >
                                 <Icons.Refresh size={14} /> ล้างตัวกรอง
@@ -1198,12 +1214,6 @@ const runDashboard = () => {
                                 >
                                     {isFetchingDB ? <div className="loader w-3 h-3 border-2 border-current border-t-transparent animate-spin"></div> : <Icons.Refresh size={16} className="group-hover:rotate-180 transition-transform duration-500" />} 
                                     REFRESH DB
-                                </button>
-                                <button className="flex items-center gap-2.5 px-5 py-2.5 bg-slate-800 hover:bg-indigo-600 text-slate-200 hover:text-white border border-slate-700 hover:border-indigo-500 text-[11px] font-black rounded-2xl transition-all duration-300 shadow-lg shadow-slate-900/20 uppercase tracking-widest">
-                                    <Icons.Upload size={16} className="text-indigo-400 group-hover:text-white" /> UPLOAD CSV
-                                </button>
-                                <button className="flex items-center gap-2.5 px-5 py-2.5 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 hover:border-red-500 text-[11px] font-black rounded-2xl transition-all duration-300 shadow-lg shadow-red-500/5 uppercase tracking-widest">
-                                    <Icons.Download size={16}/> PRINT REPORT
                                 </button>
                             </div>
                         </div>
